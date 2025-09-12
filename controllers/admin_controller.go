@@ -196,15 +196,23 @@ func (ac *AdminController) AssignRole(c *gin.Context) {
 
 	// Check if current user can assign this role
 	targetRoleLevel, exists := hierarchy[req.RoleName]
-	if !exists || currentMaxLevel <= targetRoleLevel {
+	if !exists || currentMaxLevel < targetRoleLevel {
 		utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to assign this role", "permission denied")
+		return
+	}
+
+	// Get current user ID from context
+	currentUserID, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User not authenticated", "user_id not found in context")
 		return
 	}
 
 	// Assign role
 	userRole := models.UserRole{
-		UserID: user.ID,
-		RoleID: role.ID,
+		UserID:     user.ID,
+		RoleID:     role.ID,
+		AssignedBy: currentUserID.(uint),
 	}
 
 	if err := ac.DB.Create(&userRole).Error; err != nil {
@@ -262,7 +270,7 @@ func (ac *AdminController) RemoveRole(c *gin.Context) {
 	}
 
 	targetRoleLevel, exists := hierarchy[req.RoleName]
-	if !exists || currentMaxLevel <= targetRoleLevel {
+	if !exists || currentMaxLevel < targetRoleLevel {
 		utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to remove this role", "permission denied")
 		return
 	}
