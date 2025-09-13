@@ -50,15 +50,15 @@ func RequireRoles(requiredRoles ...string) gin.HandlerFunc {
 
 // RequireManagementRoles middleware for user management endpoints
 func RequireManagementRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin", "admin", "manager")
+	return RequireRoles("superadmin")
 }
 
 // RequireRoleAssignmentRoles middleware for role assignment endpoints
 func RequireRoleAssignmentRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin", "admin", "manager", "supervisor")
+	return RequireRoles("superadmin", "admin")
 }
 
 // RequireProductManagementRoles middleware for product management endpoints
 func RequireProductManagementRoles() gin.HandlerFunc {
-	return RequireRoles("admin", "manager")
+	return RequireRoles("superadmin", "admin", "finance")
 }

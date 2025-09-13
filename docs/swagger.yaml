@@ -24,6 +24,35 @@ definitions:
     - sku
     - variant
     type: object
+  controllers.CreateUserRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      full_name:
+        example: John Doe
+        type: string
+      initial_role:
+        example: picker
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      password:
+        example: password123
+        minLength: 6
+        type: string
+      username:
+        example: john_doe
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - username
+    type: object
   controllers.LoginRequest:
     properties:
       password:
@@ -307,7 +336,85 @@ paths:
       summary: Get all users
       tags:
       - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account (admin only)
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - admin
   /api/admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user account (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - admin
     get:
       consumes:
       - application/json

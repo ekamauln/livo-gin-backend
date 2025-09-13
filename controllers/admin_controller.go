@@ -288,6 +288,211 @@ func (ac *AdminController) RemoveRole(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Role removed successfully", user.ToUserResponse())
 }
 
+// CreateUser godoc
+// @Summary Create a new user
+// @Description Create a new user account (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateUserRequest true "Create user request"
+// @Success 201 {object} utils.Response{data=models.UserResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 409 {object} utils.Response
+// @Router /api/admin/users [post]
+func (ac *AdminController) CreateUser(c *gin.Context) {
+	var req CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Check if user already exists
+	var existingUser models.User
+	if err := ac.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existingUser).Error; err == nil {
+		utils.ErrorResponse(c, http.StatusConflict, "User already exists", "username or email already taken")
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to hash password", err.Error())
+		return
+	}
+
+	// Get current user ID for audit trail
+	currentUserID, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User not authenticated", "user_id not found in context")
+		return
+	}
+
+	// Create user
+	user := models.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: hashedPassword,
+		FullName: req.FullName,
+		IsActive: req.IsActive,
+	}
+
+	if err := ac.DB.Create(&user).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create user", err.Error())
+		return
+	}
+
+	// Assign initial role if specified
+	if req.InitialRole != "" {
+		// Check permission hierarchy for role assignment
+		currentUserRoles, _ := c.Get("roles")
+		currentRoles := currentUserRoles.([]string)
+
+		hierarchy := models.GetRoleHierarchy()
+		currentMaxLevel := 0
+		for _, roleName := range currentRoles {
+			if level, exists := hierarchy[roleName]; exists && level > currentMaxLevel {
+				currentMaxLevel = level
+			}
+		}
+
+		// Check if current user can assign this role
+		targetRoleLevel, exists := hierarchy[req.InitialRole]
+		if !exists {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid role specified", "role not found")
+			return
+		}
+
+		if currentMaxLevel < targetRoleLevel {
+			utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to assign this role", "permission denied")
+			return
+		}
+
+		// Find and assign the role
+		var role models.Role
+		if err := ac.DB.Where("name = ?", req.InitialRole).First(&role).Error; err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Role not found", err.Error())
+			return
+		}
+
+		userRole := models.UserRole{
+			UserID:     user.ID,
+			RoleID:     role.ID,
+			AssignedBy: currentUserID.(uint),
+		}
+
+		if err := ac.DB.Create(&userRole).Error; err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to assign role", err.Error())
+			return
+		}
+	} else {
+		// Assign guest role by default
+		var guestRole models.Role
+		if err := ac.DB.Where("name = ?", "guest").First(&guestRole).Error; err == nil {
+			userRole := models.UserRole{
+				UserID:     user.ID,
+				RoleID:     guestRole.ID,
+				AssignedBy: currentUserID.(uint),
+			}
+			ac.DB.Create(&userRole)
+		}
+	}
+
+	// Load user with roles
+	ac.DB.Preload("UserRoles.Role").Preload("UserRoles.Assigner").First(&user, user.ID)
+
+	utils.SuccessResponse(c, http.StatusCreated, "User created successfully", user.ToUserResponse())
+}
+
+// DeleteUser godoc
+// @Summary Delete a user
+// @Description Delete a user account (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/admin/users/{id} [delete]
+func (ac *AdminController) DeleteUser(c *gin.Context) {
+	userID := c.Param("id")
+
+	// Find user to be deleted
+	var user models.User
+	if err := ac.DB.Preload("UserRoles.Role").First(&user, userID).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "User not found", err.Error())
+		return
+	}
+
+	// Prevent deletion of current user
+	currentUserID, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User not authenticated", "user_id not found in context")
+		return
+	}
+
+	if user.ID == currentUserID.(uint) {
+		utils.ErrorResponse(c, http.StatusForbidden, "Cannot delete your own account", "self-deletion not allowed")
+		return
+	}
+
+	// Check permission hierarchy - can only delete users with lower roles
+	currentUserRoles, _ := c.Get("roles")
+	currentRoles := currentUserRoles.([]string)
+
+	hierarchy := models.GetRoleHierarchy()
+	currentMaxLevel := 0
+	for _, roleName := range currentRoles {
+		if level, exists := hierarchy[roleName]; exists && level > currentMaxLevel {
+			currentMaxLevel = level
+		}
+	}
+
+	// Get target user's highest role level
+	targetMaxLevel := 0
+	for _, userRole := range user.UserRoles {
+		if level, exists := hierarchy[userRole.Role.Name]; exists && level > targetMaxLevel {
+			targetMaxLevel = level
+		}
+	}
+
+	// Check if current user has permission to delete target user
+	if currentMaxLevel <= targetMaxLevel {
+		utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to delete this user", "permission denied")
+		return
+	}
+
+	// Start transaction to ensure data consistency
+	tx := ac.DB.Begin()
+
+	// Delete all user roles first (due to foreign key constraints)
+	if err := tx.Where("user_id = ?", user.ID).Delete(&models.UserRole{}).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete user roles", err.Error())
+		return
+	}
+
+	// Delete the user (soft delete)
+	if err := tx.Delete(&user).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to delete user", err.Error())
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to commit transaction", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "User deleted successfully", nil)
+}
+
 // GetRoles godoc
 // @Summary Get all roles
 // @Description Get list of all available roles
@@ -318,6 +523,15 @@ type PaginationResponse struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
 	Total int `json:"total"`
+}
+
+type CreateUserRequest struct {
+	Username    string `json:"username" binding:"required,min=3,max=50" example:"john_doe"`
+	Email       string `json:"email" binding:"required,email" example:"john@example.com"`
+	Password    string `json:"password" binding:"required,min=6" example:"password123"`
+	FullName    string `json:"full_name" binding:"required" example:"John Doe"`
+	IsActive    bool   `json:"is_active" example:"true"`
+	InitialRole string `json:"initial_role,omitempty" example:"picker"`
 }
 
 type UpdateUserStatusRequest struct {

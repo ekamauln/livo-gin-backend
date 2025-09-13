@@ -95,12 +95,12 @@ func (ac *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	// Assign picker role by default
-	var pickerRole models.Role
-	if err := ac.DB.Where("name = ?", "picker").First(&pickerRole).Error; err == nil {
+	// Assign guest role by default
+	var guestRole models.Role
+	if err := ac.DB.Where("name = ?", "guest").First(&guestRole).Error; err == nil {
 		userRole := models.UserRole{
 			UserID:     user.ID,
-			RoleID:     pickerRole.ID,
+			RoleID:     guestRole.ID,
 			AssignedBy: 1,
 		}
 		ac.DB.Create(&userRole)
