@@ -9,16 +9,19 @@ import (
 type Order struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	OrderGineeID string         `gorm:"unique;not null" json:"order_id" example:"2509116GA36VM5"`
-	Status       string         `gorm:"not null" json:"status" example:"ready to ship"`
+	Status       string         `json:"status" example:"pending"`
 	Channel      string         `json:"channel" example:"Shopee"`
 	Store        string         `json:"store" example:"SP deParcelRibbon"`
 	Buyer        string         `json:"buyer" example:"John Doe"`
 	Courier      string         `json:"courier" example:"JNE"`
 	Tracking     string         `gorm:"index" json:"tracking" example:"JNE1234567890"`
+	UserID       *uint          `gorm:"default:null" json:"user_id"`
+	PickedAt     *time.Time     `gorm:"default:null" json:"picked_at"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 	OrderDetails []OrderDetail  `gorm:"foreignKey:OrderID" json:"order_details"`
+	User         *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 type OrderDetail struct {

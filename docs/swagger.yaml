@@ -272,6 +272,17 @@ paths:
       consumes:
       - application/json
       description: Get list of all available roles
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:

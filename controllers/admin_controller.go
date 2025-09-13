@@ -500,23 +500,55 @@ func (ac *AdminController) DeleteUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} utils.Response{data=[]models.Role}
 // @Failure 401 {object} utils.Response
 // @Router /api/admin/roles [get]
 func (ac *AdminController) GetRoles(c *gin.Context) {
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	offset := (page - 1) * limit
+
 	var roles []models.Role
-	if err := ac.DB.Find(&roles).Error; err != nil {
+	var total int64
+
+	// Get total count
+	ac.DB.Model(&models.Role{}).Count(&total)
+
+	if err := ac.DB.Limit(limit).Offset(offset).Find(&roles).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve roles", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Roles retrieved successfully", roles)
+	// Convert to response format
+	roleResponses := make([]models.RoleListResponse, len(roles))
+	for i, role := range roles {
+		roleResponses[i] = role.ToRoleListResponse()
+	}
+
+	response := RoleListResponse{
+		Roles: roleResponses,
+		Pagination: PaginationResponse{
+			Page:  page,
+			Limit: limit,
+			Total: int(total),
+		},
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Roles retrieved successfully", response)
 }
 
 // Request/Response structs
 type UsersListResponse struct {
 	Users      []models.UserResponse `json:"users"`
 	Pagination PaginationResponse    `json:"pagination"`
+}
+
+type RoleListResponse struct {
+	Roles      []models.RoleListResponse `json:"roles"`
+	Pagination PaginationResponse        `json:"pagination"`
 }
 
 type PaginationResponse struct {

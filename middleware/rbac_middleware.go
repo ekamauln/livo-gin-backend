@@ -62,3 +62,8 @@ func RequireRoleAssignmentRoles() gin.HandlerFunc {
 func RequireProductManagementRoles() gin.HandlerFunc {
 	return RequireRoles("superadmin", "admin", "finance")
 }
+
+// RequireOrderManagementRoles middleware for order management endpoints
+func RequireOrderManagementRoles() gin.HandlerFunc {
+	return RequireRoles("superadmin", "admin", "picker")
+}

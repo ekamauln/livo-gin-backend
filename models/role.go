@@ -48,3 +48,22 @@ func (r *Role) CanManageRole(targetRole string) bool {
 
 	return currentLevel > targetLevel
 }
+
+type RoleListResponse struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// ToRoleListResponse converts Role model to RoleListResponse
+func (r *Role) ToRoleListResponse() RoleListResponse {
+	return RoleListResponse{
+		ID:          r.ID,
+		Name:        r.Name,
+		Description: r.Description,
+		CreatedAt:   r.CreatedAt,
+		UpdatedAt:   r.UpdatedAt,
+	}
+}
