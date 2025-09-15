@@ -14,7 +14,7 @@ import (
 )
 
 // SetupRoutes configures all routes for the application
-func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController) *gin.Engine {
+func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController, orderMobileController *controllers.OrderMobileController) *gin.Engine {
 	// Set Gin mode
 	gin.SetMode(cfg.GinMode)
 
@@ -139,6 +139,7 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	SetupAdminRoutes(api, cfg, adminController)
 	SetupProductRoutes(api, cfg, productController)
 	SetupOrderRoutes(api, cfg, orderController)
+	SetupOrderMobileRoutes(api, cfg, orderMobileController)
 
 	return router
 }

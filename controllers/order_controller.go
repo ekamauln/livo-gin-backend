@@ -98,17 +98,12 @@ func (oc *OrderController) CreateOrder(c *gin.Context) {
 	// Create order
 	order := models.Order{
 		OrderGineeID: req.OrderGineeID,
-		Status:       req.Status,
+		Status:       "ready to pick", // Always set to "ready to pick"
 		Channel:      req.Channel,
 		Store:        req.Store,
 		Buyer:        req.Buyer,
 		Courier:      req.Courier,
 		Tracking:     req.Tracking,
-	}
-
-	// Set default status if not provided
-	if order.Status == "" {
-		order.Status = "ready to pick"
 	}
 
 	// Create order details
@@ -134,6 +129,118 @@ func (oc *OrderController) CreateOrder(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Order created successfully", order.ToOrderResponse())
 }
 
+// BulkCreateOrders godoc
+// @Summary Bulk create orders
+// @Description Create multiple orders at once, skipping duplicates (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body BulkCreateOrderRequest true "Bulk create order request"
+// @Success 201 {object} utils.Response{data=BulkCreateOrderResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/orders/bulk [post]
+func (oc *OrderController) BulkCreateOrders(c *gin.Context) {
+	var req BulkCreateOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	var createdOrders []models.Order
+	var skippedOrders []SkippedOrder
+	var failedOrders []FailedOrder
+
+	for i, orderReq := range req.Orders {
+		// Check if order with same OrderGineeID already exists
+		var existingOrder models.Order
+		if err := oc.DB.Where("order_ginee_id = ?", orderReq.OrderGineeID).First(&existingOrder).Error; err == nil {
+			// Order exists, skip it
+			skippedOrders = append(skippedOrders, SkippedOrder{
+				Index:        i,
+				OrderGineeID: orderReq.OrderGineeID,
+				Reason:       "Order already exists",
+			})
+			continue
+		}
+
+		// Create order
+		order := models.Order{
+			OrderGineeID: orderReq.OrderGineeID,
+			Status:       "ready to pick", // Always set to "ready to pick"
+			Channel:      orderReq.Channel,
+			Store:        orderReq.Store,
+			Buyer:        orderReq.Buyer,
+			Courier:      orderReq.Courier,
+			Tracking:     orderReq.Tracking,
+		}
+
+		// Create order details
+		for _, detailReq := range orderReq.OrderDetails {
+			orderDetail := models.OrderDetail{
+				Sku:         detailReq.Sku,
+				ProductName: detailReq.ProductName,
+				Variant:     detailReq.Variant,
+				Quantity:    detailReq.Quantity,
+			}
+			order.OrderDetails = append(order.OrderDetails, orderDetail)
+		}
+
+		// Try to create the order
+		if err := oc.DB.Create(&order).Error; err != nil {
+			// Failed to create order
+			failedOrders = append(failedOrders, FailedOrder{
+				Index:        i,
+				OrderGineeID: orderReq.OrderGineeID,
+				Error:        err.Error(),
+			})
+			continue
+		}
+
+		// Load order with details for response
+		oc.DB.Preload("OrderDetails").Preload("Picker").First(&order, order.ID)
+		createdOrders = append(createdOrders, order)
+	}
+
+	// Convert created orders to response format
+	createdOrderResponses := make([]models.OrderResponse, len(createdOrders))
+	for i, order := range createdOrders {
+		createdOrderResponses[i] = order.ToOrderResponse()
+	}
+
+	response := BulkCreateOrderResponse{
+		Summary: BulkCreateSummary{
+			Total:   len(req.Orders),
+			Created: len(createdOrders),
+			Skipped: len(skippedOrders),
+			Failed:  len(failedOrders),
+		},
+		CreatedOrders: createdOrderResponses,
+		SkippedOrders: skippedOrders,
+		FailedOrders:  failedOrders,
+	}
+
+	// Determine response status
+	statusCode := http.StatusCreated
+	message := "Bulk order creation completed"
+	
+	if len(createdOrders) == 0 {
+		if len(skippedOrders) > 0 {
+			statusCode = http.StatusOK
+			message = "All orders were skipped (already exist)"
+		} else {
+			statusCode = http.StatusBadRequest
+			message = "No orders could be created"
+		}
+	} else if len(failedOrders) > 0 || len(skippedOrders) > 0 {
+		message = "Bulk order creation completed with some issues"
+	}
+
+	utils.SuccessResponse(c, statusCode, message, response)
+}
+
 type OrdersListResponse struct {
 	Orders     []models.OrderResponse `json:"orders"`
 	Pagination PaginationResponse     `json:"pagination"`
@@ -141,7 +248,7 @@ type OrdersListResponse struct {
 
 type CreateOrderRequest struct {
 	OrderGineeID string                     `json:"order_id" binding:"required" example:"2509116GA36VM5"`
-	Status       string                     `json:"status" example:"pending"`
+	Status       string                     `json:"status" example:"ready to pick"`
 	Channel      string                     `json:"channel" binding:"required" example:"Shopee"`
 	Store        string                     `json:"store" binding:"required" example:"SP deParcelRibbon"`
 	Buyer        string                     `json:"buyer" binding:"required" example:"John Doe"`
@@ -155,4 +262,34 @@ type CreateOrderDetailRequest struct {
 	ProductName string `json:"product_name" binding:"required" example:"Sample Product"`
 	Variant     string `json:"variant" example:"Red - Size M"`
 	Quantity    int    `json:"quantity" binding:"required,min=1" example:"2"`
+}
+
+type BulkCreateOrderRequest struct {
+	Orders []CreateOrderRequest `json:"orders" binding:"required,min=1"`
+}
+
+type BulkCreateOrderResponse struct {
+	Summary       BulkCreateSummary      `json:"summary"`
+	CreatedOrders []models.OrderResponse `json:"created_orders"`
+	SkippedOrders []SkippedOrder         `json:"skipped_orders"`
+	FailedOrders  []FailedOrder          `json:"failed_orders"`
+}
+
+type BulkCreateSummary struct {
+	Total   int `json:"total"`
+	Created int `json:"created"`
+	Skipped int `json:"skipped"`
+	Failed  int `json:"failed"`
+}
+
+type SkippedOrder struct {
+	Index        int    `json:"index"`
+	OrderGineeID string `json:"order_id"`
+	Reason       string `json:"reason"`
+}
+
+type FailedOrder struct {
+	Index        int    `json:"index"`
+	OrderGineeID string `json:"order_id"`
+	Error        string `json:"error"`
 }

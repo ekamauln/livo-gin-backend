@@ -8,6 +8,44 @@ definitions:
     required:
     - role_name
     type: object
+  controllers.BulkCreateOrderRequest:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/controllers.CreateOrderRequest'
+        minItems: 1
+        type: array
+    required:
+    - orders
+    type: object
+  controllers.BulkCreateOrderResponse:
+    properties:
+      created_orders:
+        items:
+          $ref: '#/definitions/models.OrderResponse'
+        type: array
+      failed_orders:
+        items:
+          $ref: '#/definitions/controllers.FailedOrder'
+        type: array
+      skipped_orders:
+        items:
+          $ref: '#/definitions/controllers.SkippedOrder'
+        type: array
+      summary:
+        $ref: '#/definitions/controllers.BulkCreateSummary'
+    type: object
+  controllers.BulkCreateSummary:
+    properties:
+      created:
+        type: integer
+      failed:
+        type: integer
+      skipped:
+        type: integer
+      total:
+        type: integer
+    type: object
   controllers.CreateOrderDetailRequest:
     properties:
       product_name:
@@ -48,7 +86,7 @@ definitions:
         example: 2509116GA36VM5
         type: string
       status:
-        example: pending
+        example: ready to pick
         type: string
       store:
         example: SP deParcelRibbon
@@ -108,6 +146,15 @@ definitions:
     - password
     - username
     type: object
+  controllers.FailedOrder:
+    properties:
+      error:
+        type: string
+      index:
+        type: integer
+      order_id:
+        type: string
+    type: object
   controllers.LoginRequest:
     properties:
       password:
@@ -128,6 +175,56 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserResponse'
+    type: object
+  controllers.MobileOrderDetailResponse:
+    properties:
+      buyer:
+        type: string
+      channel:
+        type: string
+      courier:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_details:
+        items:
+          $ref: '#/definitions/controllers.MobileOrderDetailWithProduct'
+        type: array
+      order_id:
+        type: string
+      picked_at:
+        type: string
+      picked_by:
+        type: string
+      status:
+        type: string
+      store:
+        type: string
+      tracking:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  controllers.MobileOrderDetailWithProduct:
+    properties:
+      barcode:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      order_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      variant:
+        type: string
     type: object
   controllers.OrdersListResponse:
     properties:
@@ -193,6 +290,15 @@ definitions:
         type: string
     required:
     - role_name
+    type: object
+  controllers.SkippedOrder:
+    properties:
+      index:
+        type: integer
+      order_id:
+        type: string
+      reason:
+        type: string
     type: object
   controllers.UpdateProductRequest:
     properties:
@@ -973,6 +1079,178 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/mobile/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all orders with "ready to pick" status (mobile - picker
+        only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OrdersListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all orders for pickers
+      tags:
+      - mobile-orders
+  /api/mobile/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get specific order details with product location and barcode joined
+        by SKU
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.MobileOrderDetailResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get order details with product information
+      tags:
+      - mobile-orders
+  /api/mobile/orders/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Change order status from "picking process" to "picking complete"
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Complete picking process
+      tags:
+      - mobile-orders
+  /api/mobile/orders/{id}/pick:
+    put:
+      consumes:
+      - application/json
+      description: Change order status from "ready to pick" to "picking process" and
+        assign to current picker
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Pick an order for processing
+      tags:
+      - mobile-orders
   /api/orders:
     get:
       consumes:
@@ -1052,6 +1330,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new order
+      tags:
+      - orders
+  /api/orders/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Create multiple orders at once, skipping duplicates (logged-in
+        users only)
+      parameters:
+      - description: Bulk create order request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.BulkCreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.BulkCreateOrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Bulk create orders
       tags:
       - orders
   /api/products:

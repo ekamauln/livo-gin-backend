@@ -17,5 +17,6 @@ func SetupOrderRoutes(api *gin.RouterGroup, cfg *config.Config, orderController 
 		// Public order routes
 		order.GET("", orderController.GetOrders)
 		order.POST("", orderController.CreateOrder)
+		order.POST("/bulk", orderController.BulkCreateOrders)
 	}
 }
