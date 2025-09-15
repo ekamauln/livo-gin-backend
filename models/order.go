@@ -56,7 +56,6 @@ type OrderResponse struct {
 
 type OrderDetailResponse struct {
 	ID          uint   `json:"id"`
-	OrderID     uint   `json:"order_id"`
 	Sku         string `json:"sku"`
 	ProductName string `json:"product_name"`
 	Variant     string `json:"variant"`
@@ -69,7 +68,6 @@ func (o *Order) ToOrderResponse() OrderResponse {
 	for i, od := range o.OrderDetails {
 		orderDetails[i] = OrderDetailResponse{
 			ID:          od.ID,
-			OrderID:     od.OrderID,
 			Sku:         od.Sku,
 			ProductName: od.ProductName,
 			Variant:     od.Variant,

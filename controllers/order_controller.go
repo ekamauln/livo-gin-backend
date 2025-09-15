@@ -44,8 +44,8 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	// Get total count
 	oc.DB.Model(&models.Order{}).Count(&total)
 
-	// Get orders with pagination
-	if err := oc.DB.Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {
+	// Get orders with pagination, sorted by ID ascending
+	if err := oc.DB.Order("id ASC").Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve orders", err.Error())
 		return
 	}
@@ -225,7 +225,7 @@ func (oc *OrderController) BulkCreateOrders(c *gin.Context) {
 	// Determine response status
 	statusCode := http.StatusCreated
 	message := "Bulk order creation completed"
-	
+
 	if len(createdOrders) == 0 {
 		if len(skippedOrders) > 0 {
 			statusCode = http.StatusOK

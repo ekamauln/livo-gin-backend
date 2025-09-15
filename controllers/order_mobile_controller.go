@@ -29,7 +29,7 @@ func NewOrderMobileController(db *gorm.DB) *OrderMobileController {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} utils.Response{data=OrdersListResponse}
+// @Success 200 {object} utils.Response{data=MobileOrdersListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Router /api/mobile/orders [get]
@@ -45,8 +45,9 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 	// Get total count of "ready to pick" orders
 	omc.DB.Model(&models.Order{}).Where("status = ?", "ready to pick").Count(&total)
 
-	// Get orders with "ready to pick" status only
+	// Get orders with "ready to pick" status only, sorted by ID ascending
 	if err := omc.DB.Where("status = ?", "ready to pick").
+		Order("id ASC").
 		Limit(limit).Offset(offset).
 		Preload("OrderDetails").
 		Find(&orders).Error; err != nil {
@@ -54,13 +55,78 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format
-	orderResponses := make([]models.OrderResponse, len(orders))
+	// Convert to response format with product location and barcode
+	orderResponses := make([]MobileOrderListResponse, len(orders))
 	for i, order := range orders {
-		orderResponses[i] = order.ToOrderResponse()
+		// Get product details for each order detail
+		var orderDetailsWithProduct []MobileOrderDetailWithProduct
+		for _, detail := range order.OrderDetails {
+			var product models.Product
+
+			// Find product by SKU
+			if err := omc.DB.Where("sku = ?", detail.Sku).First(&product).Error; err != nil {
+				// If product not found, use placeholder values
+				orderDetailsWithProduct = append(orderDetailsWithProduct, MobileOrderDetailWithProduct{
+					OrderDetailResponse: models.OrderDetailResponse{
+						ID:          detail.ID,
+						Sku:         detail.Sku,
+						ProductName: detail.ProductName,
+						Variant:     detail.Variant,
+						Quantity:    detail.Quantity,
+					},
+					Location: "Location not found",
+					Barcode:  "Barcode not found",
+				})
+			} else {
+				// Product found, include location and barcode
+				orderDetailsWithProduct = append(orderDetailsWithProduct, MobileOrderDetailWithProduct{
+					OrderDetailResponse: models.OrderDetailResponse{
+						ID:          detail.ID,
+						Sku:         detail.Sku,
+						ProductName: detail.ProductName,
+						Variant:     detail.Variant,
+						Quantity:    detail.Quantity,
+					},
+					Location: product.Location,
+					Barcode:  product.Barcode,
+				})
+			}
+		}
+
+		// Handle picked_at field
+		var pickedAtStr string
+		if order.PickedAt != nil {
+			pickedAtStr = order.PickedAt.Format("2006-01-02 15:04:05")
+		} else {
+			pickedAtStr = "Not picked yet"
+		}
+
+		// Handle picked_by field
+		var pickedByStr string
+		if order.Picker != nil {
+			pickedByStr = order.Picker.FullName + " (" + order.Picker.Username + ")"
+		} else {
+			pickedByStr = "Not picked yet"
+		}
+
+		orderResponses[i] = MobileOrderListResponse{
+			ID:           order.ID,
+			OrderGineeID: order.OrderGineeID,
+			Status:       order.Status,
+			Channel:      order.Channel,
+			Store:        order.Store,
+			Buyer:        order.Buyer,
+			Courier:      order.Courier,
+			Tracking:     order.Tracking,
+			PickedAt:     pickedAtStr,
+			CreatedAt:    order.CreatedAt,
+			UpdatedAt:    order.UpdatedAt,
+			PickedBy:     pickedByStr,
+			OrderDetails: orderDetailsWithProduct,
+		}
 	}
 
-	response := OrdersListResponse{
+	response := MobileOrdersListResponse{
 		Orders: orderResponses,
 		Pagination: PaginationResponse{
 			Page:  page,
@@ -195,7 +261,6 @@ func (omc *OrderMobileController) GetOrder(c *gin.Context) {
 			orderDetailsWithProduct = append(orderDetailsWithProduct, MobileOrderDetailWithProduct{
 				OrderDetailResponse: models.OrderDetailResponse{
 					ID:          detail.ID,
-					OrderID:     detail.OrderID,
 					Sku:         detail.Sku,
 					ProductName: detail.ProductName,
 					Variant:     detail.Variant,
@@ -209,7 +274,6 @@ func (omc *OrderMobileController) GetOrder(c *gin.Context) {
 			orderDetailsWithProduct = append(orderDetailsWithProduct, MobileOrderDetailWithProduct{
 				OrderDetailResponse: models.OrderDetailResponse{
 					ID:          detail.ID,
-					OrderID:     detail.OrderID,
 					Sku:         detail.Sku,
 					ProductName: detail.ProductName,
 					Variant:     detail.Variant,
@@ -317,21 +381,42 @@ func (omc *OrderMobileController) CompletePickingOrder(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Order picking completed successfully", order.ToOrderResponse())
 }
 
-// Response structs for mobile endpoints - using shared types from other controllers
+// Response structs for mobile endpoints
 type MobileOrderDetailResponse struct {
-	ID           uint                            `json:"id"`
-	OrderGineeID string                          `json:"order_id"`
-	Status       string                          `json:"status"`
-	Channel      string                          `json:"channel"`
-	Store        string                          `json:"store"`
-	Buyer        string                          `json:"buyer"`
-	Courier      string                          `json:"courier"`
-	Tracking     string                          `json:"tracking"`
-	PickedAt     string                          `json:"picked_at"`
-	CreatedAt    time.Time                       `json:"created_at"`
-	UpdatedAt    time.Time                       `json:"updated_at"`
-	PickedBy     string                          `json:"picked_by"`
+	ID           uint                           `json:"id"`
+	OrderGineeID string                         `json:"order_id"`
+	Status       string                         `json:"status"`
+	Channel      string                         `json:"channel"`
+	Store        string                         `json:"store"`
+	Buyer        string                         `json:"buyer"`
+	Courier      string                         `json:"courier"`
+	Tracking     string                         `json:"tracking"`
+	PickedAt     string                         `json:"picked_at"`
+	CreatedAt    time.Time                      `json:"created_at"`
+	UpdatedAt    time.Time                      `json:"updated_at"`
+	PickedBy     string                         `json:"picked_by"`
 	OrderDetails []MobileOrderDetailWithProduct `json:"order_details"`
+}
+
+type MobileOrderListResponse struct {
+	ID           uint                           `json:"id"`
+	OrderGineeID string                         `json:"order_id"`
+	Status       string                         `json:"status"`
+	Channel      string                         `json:"channel"`
+	Store        string                         `json:"store"`
+	Buyer        string                         `json:"buyer"`
+	Courier      string                         `json:"courier"`
+	Tracking     string                         `json:"tracking"`
+	PickedAt     string                         `json:"picked_at"`
+	CreatedAt    time.Time                      `json:"created_at"`
+	UpdatedAt    time.Time                      `json:"updated_at"`
+	PickedBy     string                         `json:"picked_by"`
+	OrderDetails []MobileOrderDetailWithProduct `json:"order_details"`
+}
+
+type MobileOrdersListResponse struct {
+	Orders     []MobileOrderListResponse `json:"orders"`
+	Pagination PaginationResponse        `json:"pagination"`
 }
 
 type MobileOrderDetailWithProduct struct {

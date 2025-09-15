@@ -215,8 +215,6 @@ definitions:
         type: integer
       location:
         type: string
-      order_id:
-        type: integer
       product_name:
         type: string
       quantity:
@@ -225,6 +223,46 @@ definitions:
         type: string
       variant:
         type: string
+    type: object
+  controllers.MobileOrderListResponse:
+    properties:
+      buyer:
+        type: string
+      channel:
+        type: string
+      courier:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_details:
+        items:
+          $ref: '#/definitions/controllers.MobileOrderDetailWithProduct'
+        type: array
+      order_id:
+        type: string
+      picked_at:
+        type: string
+      picked_by:
+        type: string
+      status:
+        type: string
+      store:
+        type: string
+      tracking:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  controllers.MobileOrdersListResponse:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/controllers.MobileOrderListResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
     type: object
   controllers.OrdersListResponse:
     properties:
@@ -364,8 +402,6 @@ definitions:
   models.OrderDetailResponse:
     properties:
       id:
-        type: integer
-      order_id:
         type: integer
       product_name:
         type: string
@@ -1106,7 +1142,7 @@ paths:
             - $ref: '#/definitions/utils.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/controllers.OrdersListResponse'
+                  $ref: '#/definitions/controllers.MobileOrdersListResponse'
               type: object
         "401":
           description: Unauthorized

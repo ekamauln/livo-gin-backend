@@ -1018,7 +1018,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/controllers.OrdersListResponse"
+                                            "$ref": "#/definitions/controllers.MobileOrdersListResponse"
                                         }
                                     }
                                 }
@@ -2277,9 +2277,6 @@ const docTemplate = `{
                 "location": {
                     "type": "string"
                 },
-                "order_id": {
-                    "type": "integer"
-                },
                 "product_name": {
                     "type": "string"
                 },
@@ -2291,6 +2288,67 @@ const docTemplate = `{
                 },
                 "variant": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.MobileOrderListResponse": {
+            "type": "object",
+            "properties": {
+                "buyer": {
+                    "type": "string"
+                },
+                "channel": {
+                    "type": "string"
+                },
+                "courier": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.MobileOrderDetailWithProduct"
+                    }
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "picked_at": {
+                    "type": "string"
+                },
+                "picked_by": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "store": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.MobileOrdersListResponse": {
+            "type": "object",
+            "properties": {
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.MobileOrderListResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
                 }
             }
         },
@@ -2496,9 +2554,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
-                },
-                "order_id": {
                     "type": "integer"
                 },
                 "product_name": {
