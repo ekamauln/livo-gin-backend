@@ -52,8 +52,9 @@ func main() {
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)
-	log.Printf("RapiDoc API documentation available at http://localhost:%s/docs", cfg.Port)
-	log.Printf("Legacy Swagger UI still available at http://localhost:%s/swagger/index.html", cfg.Port)
+	log.Printf("Health check available at http://192.168.31.136:%s/health", cfg.Port)
+	log.Printf("RapiDoc API documentation available at http://192.168.31.136:%s/docs", cfg.Port)
+	log.Printf("Legacy Swagger UI still available at http://192.168.31.136:%s/swagger/index.html", cfg.Port)
 
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatal("Failed to start server:", err)
