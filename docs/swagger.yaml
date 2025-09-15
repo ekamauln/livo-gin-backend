@@ -8,6 +8,61 @@ definitions:
     required:
     - role_name
     type: object
+  controllers.CreateOrderDetailRequest:
+    properties:
+      product_name:
+        example: Sample Product
+        type: string
+      quantity:
+        example: 2
+        minimum: 1
+        type: integer
+      sku:
+        example: PROD001
+        type: string
+      variant:
+        example: Red - Size M
+        type: string
+    required:
+    - product_name
+    - quantity
+    - sku
+    type: object
+  controllers.CreateOrderRequest:
+    properties:
+      buyer:
+        example: John Doe
+        type: string
+      channel:
+        example: Shopee
+        type: string
+      courier:
+        example: JNE
+        type: string
+      order_details:
+        items:
+          $ref: '#/definitions/controllers.CreateOrderDetailRequest'
+        minItems: 1
+        type: array
+      order_id:
+        example: 2509116GA36VM5
+        type: string
+      status:
+        example: pending
+        type: string
+      store:
+        example: SP deParcelRibbon
+        type: string
+      tracking:
+        example: JNE1234567890
+        type: string
+    required:
+    - buyer
+    - channel
+    - order_details
+    - order_id
+    - store
+    type: object
   controllers.CreateProductRequest:
     properties:
       image:
@@ -73,6 +128,15 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserResponse'
+    type: object
+  controllers.OrdersListResponse:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/models.OrderResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
     type: object
   controllers.PaginationResponse:
     properties:
@@ -190,6 +254,52 @@ definitions:
         items:
           $ref: '#/definitions/models.UserResponse'
         type: array
+    type: object
+  models.OrderDetailResponse:
+    properties:
+      id:
+        type: integer
+      order_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      variant:
+        type: string
+    type: object
+  models.OrderResponse:
+    properties:
+      buyer:
+        type: string
+      channel:
+        type: string
+      courier:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_details:
+        items:
+          $ref: '#/definitions/models.OrderDetailResponse'
+        type: array
+      order_id:
+        type: string
+      picked_at:
+        type: string
+      picked_by:
+        type: string
+      status:
+        type: string
+      store:
+        type: string
+      tracking:
+        type: string
+      updated_at:
+        type: string
     type: object
   models.ProductResponse:
     properties:
@@ -863,6 +973,87 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all orders (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OrdersListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Create a new order with order details (logged-in users only)
+      parameters:
+      - description: Create order request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new order
+      tags:
+      - orders
   /api/products:
     get:
       consumes:

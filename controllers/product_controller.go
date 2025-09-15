@@ -216,14 +216,13 @@ func (pc *ProductController) CreateProduct(c *gin.Context) {
 		Variant: req.Variant,
 	}
 
+	// Create a new product and return the response
 	if err := pc.DB.Create(&product).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create product", err.Error())
 		return
 	}
 
 	utils.SuccessResponse(c, http.StatusCreated, "Product created successfully", product.ToProductResponse())
-
-	// Create a new product and return the response
 }
 
 // Request/Response structs

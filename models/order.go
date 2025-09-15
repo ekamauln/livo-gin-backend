@@ -15,13 +15,13 @@ type Order struct {
 	Buyer        string         `json:"buyer" example:"John Doe"`
 	Courier      string         `json:"courier" example:"JNE"`
 	Tracking     string         `gorm:"index" json:"tracking" example:"JNE1234567890"`
-	UserID       *uint          `gorm:"default:null" json:"user_id"`
+	PickerID     *uint          `gorm:"default:null" json:"picker_id"`
 	PickedAt     *time.Time     `gorm:"default:null" json:"picked_at"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 	OrderDetails []OrderDetail  `gorm:"foreignKey:OrderID" json:"order_details"`
-	User         *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Picker       *User          `gorm:"foreignKey:PickerID" json:"picker,omitempty"`
 }
 
 type OrderDetail struct {
@@ -50,6 +50,8 @@ type OrderResponse struct {
 	CreatedAt    time.Time             `json:"created_at"`
 	UpdatedAt    time.Time             `json:"updated_at"`
 	OrderDetails []OrderDetailResponse `json:"order_details"`
+	PickedBy     string                `json:"picked_by"`
+	PickedAt     string                `json:"picked_at"`
 }
 
 type OrderDetailResponse struct {
@@ -75,6 +77,22 @@ func (o *Order) ToOrderResponse() OrderResponse {
 		}
 	}
 
+	// Handle picked_at field
+	var pickedAtStr string
+	if o.PickedAt != nil {
+		pickedAtStr = o.PickedAt.Format("2006-01-02 15:04:05")
+	} else {
+		pickedAtStr = "Not picked yet"
+	}
+
+	// Handle picked_by field
+	var pickedByStr string
+	if o.Picker != nil {
+		pickedByStr = o.Picker.FullName + " (" + o.Picker.Username + ")"
+	} else {
+		pickedByStr = "Not picked yet"
+	}
+
 	return OrderResponse{
 		ID:           o.ID,
 		OrderGineeID: o.OrderGineeID,
@@ -86,6 +104,8 @@ func (o *Order) ToOrderResponse() OrderResponse {
 		Tracking:     o.Tracking,
 		CreatedAt:    o.CreatedAt,
 		UpdatedAt:    o.UpdatedAt,
+		PickedBy:     pickedByStr,
+		PickedAt:     pickedAtStr,
 		OrderDetails: orderDetails,
 	}
 }

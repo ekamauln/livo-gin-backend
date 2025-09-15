@@ -1,1 +1,158 @@
 package controllers
+
+import (
+	"livo-gin-backend/models"
+	"livo-gin-backend/utils"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+type OrderController struct {
+	DB *gorm.DB
+}
+
+// NewOrderController creates a new order controller
+func NewOrderController(db *gorm.DB) *OrderController {
+	return &OrderController{DB: db}
+}
+
+// GetOrders godoc
+// @Summary Get all orders
+// @Description Get list of all orders (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.Response{data=OrdersListResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/orders [get]
+func (oc *OrderController) GetOrders(c *gin.Context) {
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	offset := (page - 1) * limit
+
+	var orders []models.Order
+	var total int64
+
+	// Get total count
+	oc.DB.Model(&models.Order{}).Count(&total)
+
+	// Get orders with pagination
+	if err := oc.DB.Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve orders", err.Error())
+		return
+	}
+
+	// Convert to response format
+	orderResponses := make([]models.OrderResponse, len(orders))
+	for i, order := range orders {
+		orderResponses[i] = order.ToOrderResponse()
+	}
+
+	response := OrdersListResponse{
+		Orders: orderResponses,
+		Pagination: PaginationResponse{
+			Page:  page,
+			Limit: limit,
+			Total: int(total),
+		},
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Orders retrieved successfully", response)
+}
+
+// CreateOrder godoc
+// @Summary Create a new order
+// @Description Create a new order with order details (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateOrderRequest true "Create order request"
+// @Success 201 {object} utils.Response{data=models.OrderResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/orders [post]
+func (oc *OrderController) CreateOrder(c *gin.Context) {
+	var req CreateOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Check if order with same OrderGineeID already exists
+	var existingOrder models.Order
+	if err := oc.DB.Where("order_ginee_id = ?", req.OrderGineeID).First(&existingOrder).Error; err == nil {
+		utils.ErrorResponse(c, http.StatusConflict, "Order already exists", "order with this ID already exists")
+		return
+	}
+
+	// Create order
+	order := models.Order{
+		OrderGineeID: req.OrderGineeID,
+		Status:       req.Status,
+		Channel:      req.Channel,
+		Store:        req.Store,
+		Buyer:        req.Buyer,
+		Courier:      req.Courier,
+		Tracking:     req.Tracking,
+	}
+
+	// Set default status if not provided
+	if order.Status == "" {
+		order.Status = "ready to pick"
+	}
+
+	// Create order details
+	for _, detailReq := range req.OrderDetails {
+		orderDetail := models.OrderDetail{
+			Sku:         detailReq.Sku,
+			ProductName: detailReq.ProductName,
+			Variant:     detailReq.Variant,
+			Quantity:    detailReq.Quantity,
+		}
+		order.OrderDetails = append(order.OrderDetails, orderDetail)
+	}
+
+	// Create order with details in a transaction
+	if err := oc.DB.Create(&order).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create order", err.Error())
+		return
+	}
+
+	// Load order with details for response
+	oc.DB.Preload("OrderDetails").Preload("Picker").First(&order, order.ID)
+
+	utils.SuccessResponse(c, http.StatusCreated, "Order created successfully", order.ToOrderResponse())
+}
+
+type OrdersListResponse struct {
+	Orders     []models.OrderResponse `json:"orders"`
+	Pagination PaginationResponse     `json:"pagination"`
+}
+
+type CreateOrderRequest struct {
+	OrderGineeID string                     `json:"order_id" binding:"required" example:"2509116GA36VM5"`
+	Status       string                     `json:"status" example:"pending"`
+	Channel      string                     `json:"channel" binding:"required" example:"Shopee"`
+	Store        string                     `json:"store" binding:"required" example:"SP deParcelRibbon"`
+	Buyer        string                     `json:"buyer" binding:"required" example:"John Doe"`
+	Courier      string                     `json:"courier" example:"JNE"`
+	Tracking     string                     `json:"tracking" example:"JNE1234567890"`
+	OrderDetails []CreateOrderDetailRequest `json:"order_details" binding:"required,min=1"`
+}
+
+type CreateOrderDetailRequest struct {
+	Sku         string `json:"sku" binding:"required" example:"PROD001"`
+	ProductName string `json:"product_name" binding:"required" example:"Sample Product"`
+	Variant     string `json:"variant" example:"Red - Size M"`
+	Quantity    int    `json:"quantity" binding:"required,min=1" example:"2"`
+}

@@ -972,6 +972,141 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of all orders (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get all orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OrdersListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new order with order details (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Create a new order",
+                "parameters": [
+                    {
+                        "description": "Create order request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.CreateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.OrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/products": {
             "get": {
                 "security": [
@@ -1495,6 +1630,80 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.CreateOrderDetailRequest": {
+            "type": "object",
+            "required": [
+                "product_name",
+                "quantity",
+                "sku"
+            ],
+            "properties": {
+                "product_name": {
+                    "type": "string",
+                    "example": "Sample Product"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 2
+                },
+                "sku": {
+                    "type": "string",
+                    "example": "PROD001"
+                },
+                "variant": {
+                    "type": "string",
+                    "example": "Red - Size M"
+                }
+            }
+        },
+        "controllers.CreateOrderRequest": {
+            "type": "object",
+            "required": [
+                "buyer",
+                "channel",
+                "order_details",
+                "order_id",
+                "store"
+            ],
+            "properties": {
+                "buyer": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "channel": {
+                    "type": "string",
+                    "example": "Shopee"
+                },
+                "courier": {
+                    "type": "string",
+                    "example": "JNE"
+                },
+                "order_details": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/controllers.CreateOrderDetailRequest"
+                    }
+                },
+                "order_id": {
+                    "type": "string",
+                    "example": "2509116GA36VM5"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "pending"
+                },
+                "store": {
+                    "type": "string",
+                    "example": "SP deParcelRibbon"
+                },
+                "tracking": {
+                    "type": "string",
+                    "example": "JNE1234567890"
+                }
+            }
+        },
         "controllers.CreateProductRequest": {
             "type": "object",
             "required": [
@@ -1584,6 +1793,20 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/models.UserResponse"
+                }
+            }
+        },
+        "controllers.OrdersListResponse": {
+            "type": "object",
+            "properties": {
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
                 }
             }
         },
@@ -1754,6 +1977,76 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.UserResponse"
                     }
+                }
+            }
+        },
+        "models.OrderDetailResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "variant": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "buyer": {
+                    "type": "string"
+                },
+                "channel": {
+                    "type": "string"
+                },
+                "courier": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderDetailResponse"
+                    }
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "picked_at": {
+                    "type": "string"
+                },
+                "picked_by": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "store": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
