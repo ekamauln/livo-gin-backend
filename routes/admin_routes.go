@@ -21,6 +21,8 @@ func SetupAdminRoutes(api *gin.RouterGroup, cfg *config.Config, adminController 
 			users.GET("", adminController.GetUsers)
 			users.GET("/:id", adminController.GetUser)
 			users.PUT("/:id/status", adminController.UpdateUserStatus)
+			users.PUT("/:id/password", adminController.UpdateUserPassword)
+			users.PUT("/:id/profile", adminController.UpdateUserProfile)
 			users.POST("", adminController.CreateUser)
 			users.DELETE("/:id", adminController.DeleteUser)
 		}

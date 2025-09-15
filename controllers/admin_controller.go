@@ -493,6 +493,174 @@ func (ac *AdminController) DeleteUser(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "User deleted successfully", nil)
 }
 
+// UpdateUserPassword godoc
+// @Summary Update user password
+// @Description Update a user's password (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Param request body UpdateUserPasswordRequest true "Update password request"
+// @Success 200 {object} utils.Response{data=models.UserResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/admin/users/{id}/password [put]
+func (ac *AdminController) UpdateUserPassword(c *gin.Context) {
+	userID := c.Param("id")
+
+	var req UpdateUserPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Find user to be updated
+	var user models.User
+	if err := ac.DB.Preload("UserRoles.Role").First(&user, userID).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "User not found", err.Error())
+		return
+	}
+
+	// Check permission hierarchy - can only update users with lower or equal roles
+	currentUserRoles, _ := c.Get("roles")
+	currentRoles := currentUserRoles.([]string)
+
+	hierarchy := models.GetRoleHierarchy()
+	currentMaxLevel := 0
+	for _, roleName := range currentRoles {
+		if level, exists := hierarchy[roleName]; exists && level > currentMaxLevel {
+			currentMaxLevel = level
+		}
+	}
+
+	// Get target user's highest role level
+	targetMaxLevel := 0
+	for _, userRole := range user.UserRoles {
+		if level, exists := hierarchy[userRole.Role.Name]; exists && level > targetMaxLevel {
+			targetMaxLevel = level
+		}
+	}
+
+	// Check if current user has permission to update target user
+	if currentMaxLevel < targetMaxLevel {
+		utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to update this user", "permission denied")
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to hash password", err.Error())
+		return
+	}
+
+	// Update password
+	user.Password = hashedPassword
+	if err := ac.DB.Save(&user).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update password", err.Error())
+		return
+	}
+
+	// Clear refresh token to force re-login
+	user.RefreshToken = ""
+	ac.DB.Save(&user)
+
+	// Load user with roles for response
+	ac.DB.Preload("UserRoles.Role").Preload("UserRoles.Assigner").First(&user, user.ID)
+
+	utils.SuccessResponse(c, http.StatusOK, "Password updated successfully", user.ToUserResponse())
+}
+
+// UpdateUserProfile godoc
+// @Summary Update user profile
+// @Description Update user's full name and email (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Param request body UpdateUserProfileRequest true "Update profile request"
+// @Success 200 {object} utils.Response{data=models.UserResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 409 {object} utils.Response
+// @Router /api/admin/users/{id}/profile [put]
+func (ac *AdminController) UpdateUserProfile(c *gin.Context) {
+	userID := c.Param("id")
+
+	var req UpdateUserProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Find user to be updated
+	var user models.User
+	if err := ac.DB.Preload("UserRoles.Role").First(&user, userID).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "User not found", err.Error())
+		return
+	}
+
+	// Check if email already exists (if email is being changed)
+	if req.Email != "" && req.Email != user.Email {
+		var existingUser models.User
+		if err := ac.DB.Where("email = ? AND id != ?", req.Email, user.ID).First(&existingUser).Error; err == nil {
+			utils.ErrorResponse(c, http.StatusConflict, "Email already exists", "email already taken by another user")
+			return
+		}
+	}
+
+	// Check permission hierarchy - can only update users with lower or equal roles
+	currentUserRoles, _ := c.Get("roles")
+	currentRoles := currentUserRoles.([]string)
+
+	hierarchy := models.GetRoleHierarchy()
+	currentMaxLevel := 0
+	for _, roleName := range currentRoles {
+		if level, exists := hierarchy[roleName]; exists && level > currentMaxLevel {
+			currentMaxLevel = level
+		}
+	}
+
+	// Get target user's highest role level
+	targetMaxLevel := 0
+	for _, userRole := range user.UserRoles {
+		if level, exists := hierarchy[userRole.Role.Name]; exists && level > targetMaxLevel {
+			targetMaxLevel = level
+		}
+	}
+
+	// Check if current user has permission to update target user
+	if currentMaxLevel < targetMaxLevel {
+		utils.ErrorResponse(c, http.StatusForbidden, "Insufficient permissions to update this user", "permission denied")
+		return
+	}
+
+	// Update fields if provided
+	if req.FullName != "" {
+		user.FullName = req.FullName
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+
+	// Save changes
+	if err := ac.DB.Save(&user).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update user profile", err.Error())
+		return
+	}
+
+	// Load user with roles for response
+	ac.DB.Preload("UserRoles.Role").Preload("UserRoles.Assigner").First(&user, user.ID)
+
+	utils.SuccessResponse(c, http.StatusOK, "User profile updated successfully", user.ToUserResponse())
+}
+
 // GetRoles godoc
 // @Summary Get all roles
 // @Description Get list of all available roles
@@ -568,6 +736,15 @@ type CreateUserRequest struct {
 
 type UpdateUserStatusRequest struct {
 	IsActive bool `json:"is_active" binding:"required" example:"true"`
+}
+
+type UpdateUserPasswordRequest struct {
+	NewPassword string `json:"new_password" binding:"required,min=6" example:"newpassword123"`
+}
+
+type UpdateUserProfileRequest struct {
+	FullName string `json:"full_name,omitempty" binding:"omitempty,min=1" example:"John Doe Updated"`
+	Email    string `json:"email,omitempty" binding:"omitempty,email" example:"newemail@example.com"`
 }
 
 type AssignRoleRequest struct {
