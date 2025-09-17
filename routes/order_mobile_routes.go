@@ -17,6 +17,9 @@ func SetupOrderMobileRoutes(api *gin.RouterGroup, cfg *config.Config, orderMobil
 		// Get all orders ready to pick
 		mobileOrders.GET("", orderMobileController.GetOrders)
 		
+		// Get my ongoing picking orders (status: "picking process")
+		mobileOrders.GET("/my-picking", orderMobileController.GetMyPickingOrders)
+		
 		// Pick an order (change status to "picking process")
 		mobileOrders.PUT("/:id/pick", orderMobileController.PickingOrder)
 		

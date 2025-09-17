@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"livo-gin-backend/models"
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -66,6 +68,74 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Orders retrieved successfully", response)
+}
+
+// SearchOrders godoc
+// @Summary Search orders by order ID or tracking number
+// @Description Search orders by order ID (OrderGineeID) or tracking number using query parameters (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param order_id query string false "Order Ginee ID to search for"
+// @Param tracking query string false "Tracking number to search for"
+// @Success 200 {object} utils.Response{data=[]models.OrderResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/orders/search [get]
+func (oc *OrderController) SearchOrders(c *gin.Context) {
+	// Parse search parameters
+	orderID := c.Query("order_id")
+	tracking := c.Query("tracking")
+
+	// Validate that at least one search parameter is provided
+	if orderID == "" && tracking == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Search parameter required", "at least one search parameter (order_id or tracking) must be provided")
+		return
+	}
+
+	var orders []models.Order
+
+	// Build the query based on search parameters
+	query := oc.DB.Model(&models.Order{})
+
+	if orderID != "" && tracking != "" {
+		// Search by both order ID and tracking (AND condition)
+		query = query.Where("order_ginee_id ILIKE ? AND tracking ILIKE ?", "%"+orderID+"%", "%"+tracking+"%")
+	} else if orderID != "" {
+		// Search by order ID only
+		query = query.Where("order_ginee_id ILIKE ?", "%"+orderID+"%")
+	} else if tracking != "" {
+		// Search by tracking only
+		query = query.Where("tracking ILIKE ?", "%"+tracking+"%")
+	}
+
+	// Get orders sorted by ID ascending
+	if err := query.Order("id ASC").
+		Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").
+		Preload("OrderDetails").Find(&orders).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search orders", err.Error())
+		return
+	}
+
+	// Convert to response format
+	orderResponses := make([]models.OrderResponse, len(orders))
+	for i, order := range orders {
+		orderResponses[i] = order.ToOrderResponse()
+	}
+
+	// Build success message
+	var searchTerms []string
+	if orderID != "" {
+		searchTerms = append(searchTerms, "order_id: "+orderID)
+	}
+	if tracking != "" {
+		searchTerms = append(searchTerms, "tracking: "+tracking)
+	}
+	message := fmt.Sprintf("Found %d order for search criteria: [%s]", len(orders), strings.Join(searchTerms, ", "))
+
+	utils.SuccessResponse(c, http.StatusOK, message, orderResponses)
 }
 
 // CreateOrder godoc

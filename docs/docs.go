@@ -1040,6 +1040,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/mobile/orders/my-picking": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of orders currently being picked by the logged-in user (status: \"picking process\")",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mobile-orders"
+                ],
+                "summary": "Get my ongoing picking orders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.OrderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/mobile/orders/{id}": {
             "get": {
                 "security": [
@@ -1457,6 +1512,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/orders/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Search orders by order ID (OrderGineeID) or tracking number using query parameters (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Search orders by order ID or tracking number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order Ginee ID to search for",
+                        "name": "order_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tracking number to search for",
+                        "name": "tracking",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.OrderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/products": {
             "get": {
                 "security": [
@@ -1592,14 +1722,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/products/sku/{sku}": {
+        "/api/products/search": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get specific product information (logged-in users only)",
+                "description": "Get specific product information by SKU using query parameter (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1609,13 +1739,13 @@ const docTemplate = `{
                 "tags": [
                     "products"
                 ],
-                "summary": "Get product by SKU",
+                "summary": "Search product by SKU",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Product SKU",
                         "name": "sku",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -1636,6 +1766,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "401": {

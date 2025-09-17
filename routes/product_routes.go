@@ -17,7 +17,7 @@ func SetupProductRoutes(api *gin.RouterGroup, cfg *config.Config, productControl
 		// Public product routes
 		product.GET("", productController.GetProducts)
 		product.GET("/:id", productController.GetProduct)
-		product.GET("/sku/:sku", productController.GetProductBySku)
+		product.GET("/search", productController.GetProductBySku)
 
 		// Admin product management routes (admin, manager roles)
 		productAdmin := product.Group("")

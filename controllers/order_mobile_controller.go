@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"livo-gin-backend/models"
 	"livo-gin-backend/utils"
 	"net/http"
@@ -136,6 +137,53 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Orders retrieved successfully", response)
+}
+
+// GetMyPickingOrders godoc
+// @Summary Get my ongoing picking orders
+// @Description Get list of orders currently being picked by the logged-in user (status: "picking process")
+// @Tags mobile-orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]models.OrderResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/mobile/orders/my-picking [get]
+func (omc *OrderMobileController) GetMyPickingOrders(c *gin.Context) {
+	// Get current user ID from context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User not found", "user ID not found in context")
+		return
+	}
+
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid user ID", "user ID has invalid type")
+		return
+	}
+
+	var orders []models.Order
+
+	// Get orders currently being picked by this user
+	if err := omc.DB.Where("picker_id = ? AND status = ?", userID, "picking process").
+		Order("id ASC").
+		Preload("OrderDetails").
+		Preload("Picker").
+		Find(&orders).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve picking orders", err.Error())
+		return
+	}
+
+	// Convert to response format
+	orderResponses := make([]models.OrderResponse, len(orders))
+	for i, order := range orders {
+		orderResponses[i] = order.ToOrderResponse()
+	}
+
+	message := fmt.Sprintf("Found %d order(s) currently being picked by you", len(orders))
+	utils.SuccessResponse(c, http.StatusOK, message, orderResponses)
 }
 
 // PickingOrder godoc

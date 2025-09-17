@@ -93,25 +93,36 @@ func (pc *ProductController) GetProduct(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Product retrieved successfully", product.ToProductResponse())
 }
 
-// GetProduct godoc
-// @Summary Get product by SKU
-// @Description Get specific product information (logged-in users only)
+// GetProductBySku godoc
+// @Summary Search product by SKU
+// @Description Get specific product information by SKU using query parameter (logged-in users only)
 // @Tags products
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param sku path string true "Product SKU"
+// @Param sku query string true "Product SKU"
 // @Success 200 {object} utils.Response{data=models.ProductResponse}
+// @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Failure 404 {object} utils.Response
-// @Router /api/products/sku/{sku} [get]
+// @Router /api/products/search [get]
 func (pc *ProductController) GetProductBySku(c *gin.Context) {
-	productSKU := c.Param("sku")
+	productSKU := c.Query("sku")
+
+	// Validate that SKU parameter is provided
+	if productSKU == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "SKU parameter is required", "sku query parameter cannot be empty")
+		return
+	}
 
 	var product models.Product
 	if err := pc.DB.Where("sku = ?", productSKU).First(&product).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Product not found", err.Error())
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Product not found", "product with specified SKU does not exist")
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve product", err.Error())
+		}
 		return
 	}
 
