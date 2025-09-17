@@ -1324,7 +1324,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get list of all orders (logged-in users only)
+      description: Get list of all orders with optional date range filtering (logged-in
+        users only)
       parameters:
       - default: 1
         description: Page number
@@ -1336,6 +1337,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
       produces:
       - application/json
       responses:
@@ -1348,6 +1357,10 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.OrdersListResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
         "401":
           description: Unauthorized
           schema:
