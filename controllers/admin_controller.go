@@ -44,8 +44,8 @@ func (ac *AdminController) GetUsers(c *gin.Context) {
 	// Get total count
 	ac.DB.Model(&models.User{}).Count(&total)
 
-	// Get users with pagination
-	if err := ac.DB.Preload("UserRoles.Role").Preload("UserRoles.Assigner").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+	// Get users with pagination and order by ID ascending
+	if err := ac.DB.Order("id ASC").Preload("UserRoles.Role").Preload("UserRoles.Assigner").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve users", err.Error())
 		return
 	}
