@@ -735,7 +735,7 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserStatusRequest struct {
-	IsActive bool `json:"is_active" binding:"required" example:"true"`
+	IsActive bool `json:"is_active" example:"true"`
 }
 
 type UpdateUserPasswordRequest struct {

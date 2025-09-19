@@ -2680,9 +2680,6 @@ const docTemplate = `{
         },
         "controllers.UpdateUserStatusRequest": {
             "type": "object",
-            "required": [
-                "is_active"
-            ],
             "properties": {
                 "is_active": {
                     "type": "boolean",

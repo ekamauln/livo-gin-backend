@@ -387,8 +387,6 @@ definitions:
       is_active:
         example: true
         type: boolean
-    required:
-    - is_active
     type: object
   controllers.UsersListResponse:
     properties:

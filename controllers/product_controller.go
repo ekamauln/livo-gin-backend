@@ -44,8 +44,8 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 	// Get total count
 	pc.DB.Model(&models.Product{}).Count(&total)
 
-	// Get products with pagination
-	if err := pc.DB.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
+	// Get products with pagination and order by ID ascending
+	if err := pc.DB.Order("id ASC").Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve products", err.Error())
 		return
 	}
@@ -244,13 +244,13 @@ type ProductsListResponse struct {
 
 type UpdateProductRequest struct {
 	Name    string `json:"name" binding:"required"`
-	Image   string `json:"image" binding:"required,url"`
+	Image   string `json:"image" binding:"required"`
 	Variant string `json:"variant" binding:"required"`
 }
 
 type CreateProductRequest struct {
 	Sku     string `json:"sku" binding:"required,alphanum"`
 	Name    string `json:"name" binding:"required"`
-	Image   string `json:"image" binding:"required,url"`
+	Image   string `json:"image" binding:"required"`
 	Variant string `json:"variant" binding:"required"`
 }
