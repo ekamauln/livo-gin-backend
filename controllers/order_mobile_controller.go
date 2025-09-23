@@ -555,3 +555,62 @@ type MobileOrderDetailWithProduct struct {
 	Location string `json:"location"`
 	Barcode  string `json:"barcode"`
 }
+
+// CancelPickingOrder godoc
+// @Summary Cancel picking process
+// @Description Change order status from "picking process" to "ready to pick" and unassign picker
+// @Tags mobile-orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} utils.Response{data=models.OrderResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/mobile/orders/{id}/cancel [put]
+func (omc *OrderMobileController) CancelPickingOrder(c *gin.Context) {
+	// Get order ID from URL parameter
+	orderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid order ID", err.Error())
+		return
+	}
+
+	// Get current user ID from context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "User not found", "user ID not found in context")
+		return
+	}
+
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid user ID", "user ID has invalid type")
+		return
+	}
+
+	var order models.Order
+	// Find order assigned to current picker with "picking process" status
+	if err := omc.DB.Preload("OrderDetails").Where("id = ? AND picker_id = ? AND status = ?", orderID, userID, "picking process").First(&order).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found or not in picking process", "order not found or not in picking process")
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order", err.Error())
+		}
+		return
+	}
+
+	// Update order status to "ready to pick" and unassign picker
+	if err := omc.DB.Model(&order).Preload("OrderDetails").Select("status", "picker_id", "picked_at").Updates(models.Order{
+		Status:   "ready to pick",
+		PickerID: nil,
+		PickedAt: nil,
+	}).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to cancel picking order", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Order picking canceled successfully", order.ToOrderResponse())
+}

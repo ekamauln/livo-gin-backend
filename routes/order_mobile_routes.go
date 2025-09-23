@@ -21,5 +21,6 @@ func SetupOrderMobileRoutes(api *gin.RouterGroup, cfg *config.Config, orderMobil
 		mobileOrders.PUT("/:id/pick", orderMobileController.PickingOrder)             // Pick an order (change status to "picking process")
 		mobileOrders.GET("/:id", orderMobileController.GetOrder)                      // Get order details with product info (location, barcode)
 		mobileOrders.PUT("/:id/complete", orderMobileController.CompletePickingOrder) // Complete picking process (change status to "picking complete")
+		mobileOrders.PUT("/:id/cancel", orderMobileController.CancelPickingOrder)     // Cancel picking process (change status back to "ready to pick")
 	}
 }
