@@ -13,9 +13,10 @@ func SetupAuthRoutes(api *gin.RouterGroup, cfg *config.Config, authController *c
 	// Auth routes (public)
 	auth := api.Group("/auth")
 	{
-		auth.POST("/register", authController.Register)
-		auth.POST("/login", authController.Login)
-		auth.POST("/refresh", authController.RefreshToken)
-		auth.POST("/logout", middleware.AuthMiddleware(cfg), authController.Logout)
+		// Public auth routes
+		auth.POST("/register", authController.Register)                             // User registration
+		auth.POST("/login", authController.Login)                                   // User login
+		auth.POST("/refresh", authController.RefreshToken)                          // Refresh access token
+		auth.POST("/logout", middleware.AuthMiddleware(cfg), authController.Logout) // User logout
 	}
 }

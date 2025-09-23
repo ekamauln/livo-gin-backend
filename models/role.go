@@ -19,17 +19,18 @@ type Role struct {
 // GetRoleHierarchy returns role hierarchy levels
 func GetRoleHierarchy() map[string]int {
 	return map[string]int{
-		"superadmin": 9,
-		"admin":      3,
-		"finance":    3,
-		"picker":     2,
-		"outbound":   2,
-		"qc-ribbon":  2,
-		"qc-online":  2,
-		"mb-ribbon":  2,
-		"mb-online":  2,
-		"packing":    2,
-		"guest":      1,
+		"superadmin":  9,
+		"coordinator": 4,
+		"admin":       3,
+		"finance":     3,
+		"picker":      2,
+		"outbound":    2,
+		"qc-ribbon":   2,
+		"qc-online":   2,
+		"mb-ribbon":   2,
+		"mb-online":   2,
+		"packing":     2,
+		"guest":       1,
 	}
 }
 

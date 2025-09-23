@@ -14,22 +14,12 @@ func SetupOrderMobileRoutes(api *gin.RouterGroup, cfg *config.Config, orderMobil
 	mobileOrders := api.Group("/mobile/orders")
 	mobileOrders.Use(middleware.AuthMiddleware(cfg))
 	{
-		// Get all orders ready to pick
-		mobileOrders.GET("", orderMobileController.GetOrders)
-
-		// Get my ongoing picking orders (status: "picking process")
-		mobileOrders.GET("/my-picking", orderMobileController.GetMyPickingOrders)
-
-		// Search orders by order ID or tracking number
-		mobileOrders.GET("/search", orderMobileController.SearchOrders)
-
-		// Pick an order (change status to "picking process")
-		mobileOrders.PUT("/:id/pick", orderMobileController.PickingOrder)
-
-		// Get order details with product info (location, barcode)
-		mobileOrders.GET("/:id", orderMobileController.GetOrder)
-
-		// Complete picking process (change status to "picking complete")
-		mobileOrders.PUT("/:id/complete", orderMobileController.CompletePickingOrder)
+		// Public mobile order routes
+		mobileOrders.GET("", orderMobileController.GetOrders)                         // Get all orders ready to pick
+		mobileOrders.GET("/my-picking", orderMobileController.GetMyPickingOrders)     // Get my ongoing picking orders (status: "picking process")
+		mobileOrders.GET("/search", orderMobileController.SearchOrders)               // Search orders by order ID or tracking number
+		mobileOrders.PUT("/:id/pick", orderMobileController.PickingOrder)             // Pick an order (change status to "picking process")
+		mobileOrders.GET("/:id", orderMobileController.GetOrder)                      // Get order details with product info (location, barcode)
+		mobileOrders.PUT("/:id/complete", orderMobileController.CompletePickingOrder) // Complete picking process (change status to "picking complete")
 	}
 }

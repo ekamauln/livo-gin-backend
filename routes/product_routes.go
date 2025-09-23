@@ -15,17 +15,17 @@ func SetupProductRoutes(api *gin.RouterGroup, cfg *config.Config, productControl
 	product.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public product routes
-		product.GET("", productController.GetProducts)
-		product.GET("/:id", productController.GetProduct)
-		product.GET("/search", productController.GetProductBySku)
+		product.GET("", productController.GetProducts)            // Get all products
+		product.GET("/:id", productController.GetProduct)         // Get product by ID
+		product.GET("/search", productController.GetProductBySku) // Get product by SKU
 
 		// Admin product management routes (admin, manager roles)
 		productAdmin := product.Group("")
 		productAdmin.Use(middleware.RequireProductManagementRoles())
 		{
-			productAdmin.POST("", productController.CreateProduct)
-			productAdmin.PUT("/:id", productController.UpdateProduct)
-			productAdmin.DELETE("/:id", productController.RemoveProduct)
+			productAdmin.POST("", productController.CreateProduct)       // Create new product
+			productAdmin.PUT("/:id", productController.UpdateProduct)    // Update product by ID
+			productAdmin.DELETE("/:id", productController.RemoveProduct) // Delete product by ID
 		}
 	}
 }

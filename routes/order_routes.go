@@ -15,9 +15,9 @@ func SetupOrderRoutes(api *gin.RouterGroup, cfg *config.Config, orderController 
 	order.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public order routes
-		order.GET("", orderController.GetOrders)
-		order.GET("/search", orderController.SearchOrders)
-		order.POST("", orderController.CreateOrder)
-		order.POST("/bulk", orderController.BulkCreateOrders)
+		order.GET("", orderController.GetOrders)              // Get all orders
+		order.GET("/search", orderController.SearchOrders)    // Search orders
+		order.POST("", orderController.CreateOrder)           // Create new order
+		order.POST("/bulk", orderController.BulkCreateOrders) // Create multiple orders
 	}
 }

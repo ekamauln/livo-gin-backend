@@ -14,7 +14,8 @@ func SetupUserRoutes(api *gin.RouterGroup, cfg *config.Config, userController *c
 	user := api.Group("/user")
 	user.Use(middleware.AuthMiddleware(cfg))
 	{
-		user.GET("/profile", userController.GetProfile)
-		user.PUT("/profile", userController.UpdateProfile)
+		// Public user routes
+		user.GET("/profile", userController.GetProfile)    // Get user profile
+		user.PUT("/profile", userController.UpdateProfile) // Update user profile
 	}
 }

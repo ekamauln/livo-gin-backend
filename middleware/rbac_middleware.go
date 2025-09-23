@@ -50,20 +50,80 @@ func RequireRoles(requiredRoles ...string) gin.HandlerFunc {
 
 // RequireManagementRoles middleware for user management endpoints
 func RequireManagementRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin")
+	return RequireRoles("superadmin", "coordinator")
 }
 
 // RequireRoleAssignmentRoles middleware for role assignment endpoints
 func RequireRoleAssignmentRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin", "admin")
+	return RequireRoles("superadmin", "coordinator")
 }
 
 // RequireProductManagementRoles middleware for product management endpoints
 func RequireProductManagementRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin", "admin", "finance")
+	return RequireRoles("superadmin", "admin", "coordinator", "finance")
 }
 
 // RequireOrderManagementRoles middleware for order management endpoints
 func RequireOrderManagementRoles() gin.HandlerFunc {
-	return RequireRoles("superadmin", "admin", "picker")
+	return RequireRoles("superadmin", "admin", "coordinator", "picker")
+}
+
+// RequiredSuperadminRole middleware for superadmin-only endpoints
+func RequiredSuperadminRole() gin.HandlerFunc {
+	return RequireRoles("superadmin")
+}
+
+// RequireCoordinatorRole middleware for coordinator-only endpoints
+func RequireCoordinatorRole() gin.HandlerFunc {
+	return RequireRoles("coordinator")
+}
+
+// RequireAdminRole middleware for admin-only endpoints
+func RequireAdminRole() gin.HandlerFunc {
+	return RequireRoles("admin")
+}
+
+// RequireFinanceRole middleware for finance-only endpoints
+func RequireFinanceRole() gin.HandlerFunc {
+	return RequireRoles("finance")
+}
+
+// RequirePickerRole middleware for picker-only endpoints
+func RequirePickerRole() gin.HandlerFunc {
+	return RequireRoles("picker")
+}
+
+// RequireOutboundRole middleware for outbound-only endpoints
+func RequireOutboundRole() gin.HandlerFunc {
+	return RequireRoles("outbound")
+}
+
+// RequireQCRibbonRole middleware for quality control for ribbon-only endpoints
+func RequireQCRibbonRole() gin.HandlerFunc {
+	return RequireRoles("qc-ribbon")
+}
+
+// RequireQCOnlineRole middleware for quality control for online-only endpoints
+func RequireQCOnlineRole() gin.HandlerFunc {
+	return RequireRoles("qc-online")
+}
+
+// RequireMBRibbonRole middleware for product checker for ribbon-only endpoints
+func RequireMBRibbonRole() gin.HandlerFunc {
+	return RequireRoles("mb-ribbon")
+}
+
+// RequireMBOnlineRole middleware for product checker for online-only endpoints
+func RequireMBOnlineRole() gin.HandlerFunc {
+	return RequireRoles("mb-online")
+}
+
+// RequirePackingRole middleware for packing-only endpoints
+func RequirePackingRole() gin.HandlerFunc {
+	return RequireRoles("packing")
+}
+
+// RequireGuestRole middleware for guest-only endpoints
+func RequireGuestRole() gin.HandlerFunc {
+	return RequireRoles("guest")
 }

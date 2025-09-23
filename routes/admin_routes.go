@@ -18,24 +18,24 @@ func SetupAdminRoutes(api *gin.RouterGroup, cfg *config.Config, adminController 
 		users := admin.Group("/users")
 		users.Use(middleware.RequireManagementRoles())
 		{
-			users.GET("", adminController.GetUsers)
-			users.GET("/:id", adminController.GetUser)
-			users.PUT("/:id/status", adminController.UpdateUserStatus)
-			users.PUT("/:id/password", adminController.UpdateUserPassword)
-			users.PUT("/:id/profile", adminController.UpdateUserProfile)
-			users.POST("", adminController.CreateUser)
-			users.DELETE("/:id", adminController.DeleteUser)
+			users.GET("", adminController.GetUsers)                        // List all users
+			users.GET("/:id", adminController.GetUser)                     // Get user by ID
+			users.PUT("/:id/status", adminController.UpdateUserStatus)     // Update user status (active/inactive)
+			users.PUT("/:id/password", adminController.UpdateUserPassword) // Update user password
+			users.PUT("/:id/profile", adminController.UpdateUserProfile)   // Update user profile
+			users.POST("", adminController.CreateUser)                     // Create new user
+			users.DELETE("/:id", adminController.DeleteUser)               // Delete user
 		}
 
 		// Role assignment (superadmin, admin)
-		roleAssignment := admin.Group("/users/:id/roles")
+		roleAssignment := admin.Group("/users/:id/roles") // Assign or remove roles to/from a user
 		roleAssignment.Use(middleware.RequireRoleAssignmentRoles())
 		{
-			roleAssignment.POST("", adminController.AssignRole)
-			roleAssignment.DELETE("", adminController.RemoveRole)
+			roleAssignment.POST("", adminController.AssignRole)   // Assign role to user
+			roleAssignment.DELETE("", adminController.RemoveRole) // Remove role from user
 		}
 
 		// Roles management (all authenticated users can view)
-		admin.GET("/roles", adminController.GetRoles)
+		admin.GET("/roles", adminController.GetRoles) // List all roles
 	}
 }
