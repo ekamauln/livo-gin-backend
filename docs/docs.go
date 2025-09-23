@@ -96,7 +96,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all users (admin only)",
+                "description": "Get list of all users (admin only). Optional search by username or full name.",
                 "consumes": [
                     "application/json"
                 ],
@@ -106,7 +106,7 @@ const docTemplate = `{
                 "tags": [
                     "admin"
                 ],
-                "summary": "Get all users",
+                "summary": "Get all users with search capability",
                 "parameters": [
                     {
                         "type": "integer",
@@ -120,6 +120,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Items per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by username or full name",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -979,7 +985,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all orders with \"ready to pick\" status (mobile - picker only)",
+                "description": "Get list of all orders with \"ready to pick\" status (mobile - picker only). Optional search by order ID or tracking number.",
                 "consumes": [
                     "application/json"
                 ],
@@ -989,7 +995,7 @@ const docTemplate = `{
                 "tags": [
                     "mobile-orders"
                 ],
-                "summary": "Get all orders for pickers",
+                "summary": "Get all orders for pickers with search capability",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1003,6 +1009,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Items per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by order ID (OrderGineeID) or tracking number",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -1078,81 +1090,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/mobile/orders/search": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Search orders by order ID (OrderGineeID) or tracking number using query parameters (mobile picker only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "mobile-orders"
-                ],
-                "summary": "Search orders by order ID or tracking number",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Order Ginee ID to search for",
-                        "name": "order_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tracking number to search for",
-                        "name": "tracking",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.OrderResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "401": {
@@ -1463,7 +1400,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all orders with optional date range filtering (logged-in users only)",
+                "description": "Get list of all orders with optional date range filtering and search (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1499,6 +1436,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "End date (YYYY-MM-DD format)",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by Order ID or Tracking number",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -1678,81 +1621,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/orders/search": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Search orders by order ID (OrderGineeID) or tracking number using query parameters (logged-in users only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "orders"
-                ],
-                "summary": "Search orders by order ID or tracking number",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Order Ginee ID to search for",
-                        "name": "order_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tracking number to search for",
-                        "name": "tracking",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.OrderResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/products": {
             "get": {
                 "security": [
@@ -1760,7 +1628,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all products (logged-in users only)",
+                "description": "Get list of all products with optional search by SKU (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1784,6 +1652,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Items per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by SKU (partial match)",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -1881,79 +1755,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/products/search": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get specific product information by SKU using query parameter (logged-in users only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "products"
-                ],
-                "summary": "Search product by SKU",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Product SKU",
-                        "name": "sku",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.ProductResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }

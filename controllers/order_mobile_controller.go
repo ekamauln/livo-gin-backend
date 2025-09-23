@@ -23,14 +23,15 @@ func NewOrderMobileController(db *gorm.DB) *OrderMobileController {
 }
 
 // GetOrders godoc
-// @Summary Get all orders for pickers
-// @Description Get list of all orders with "ready to pick" status (mobile - picker only)
+// @Summary Get all orders for pickers with search capability
+// @Description Get list of all orders with "ready to pick" status (mobile - picker only). Optional search by order ID or tracking number.
 // @Tags mobile-orders
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param search query string false "Search by order ID (OrderGineeID) or tracking number"
 // @Success 200 {object} utils.Response{data=MobileOrdersListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
@@ -41,15 +42,27 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
+	// Parse search parameter
+	search := strings.TrimSpace(c.Query("search"))
+
 	var orders []models.Order
 	var total int64
 
-	// Get total count of "ready to pick" orders
-	omc.DB.Model(&models.Order{}).Where("status = ?", "ready to pick").Count(&total)
+	// Build base query for "ready to pick" orders
+	query := omc.DB.Model(&models.Order{}).Where("status = ?", "ready to pick")
 
-	// Get orders with "ready to pick" status only, sorted by ID ascending
-	if err := omc.DB.Where("status = ?", "ready to pick").
-		Order("id ASC").
+	// Add search conditions if search parameter is provided
+	if search != "" {
+		searchCondition := "order_ginee_id ILIKE ? OR tracking ILIKE ?"
+		searchPattern := "%" + search + "%"
+		query = query.Where(searchCondition, searchPattern, searchPattern)
+	}
+
+	// Get total count
+	query.Count(&total)
+
+	// Get orders with pagination, sorted by ID ascending
+	if err := query.Order("id ASC").
 		Limit(limit).Offset(offset).
 		Preload("OrderDetails").
 		Find(&orders).Error; err != nil {
@@ -249,88 +262,6 @@ func (omc *OrderMobileController) PickingOrder(c *gin.Context) {
 	omc.DB.Preload("OrderDetails").Preload("Picker").First(&order, order.ID)
 
 	utils.SuccessResponse(c, http.StatusOK, "Order picked successfully", order.ToOrderResponse())
-}
-
-// SearchOrders godoc
-// @Summary Search orders by order ID or tracking number
-// @Description Search orders by order ID (OrderGineeID) or tracking number using query parameters (mobile picker only)
-// @Tags mobile-orders
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param order_id query string false "Order Ginee ID to search for"
-// @Param tracking query string false "Tracking number to search for"
-// @Success 200 {object} utils.Response{data=[]models.OrderResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Router /api/mobile/orders/search [get]
-func (omc *OrderMobileController) SearchOrders(c *gin.Context) {
-	// Parse search parameters
-	orderID := c.Query("order_id")
-	tracking := c.Query("tracking")
-
-	// Validate that at least one search parameter is provided
-	if orderID == "" && tracking == "" {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Search parameter required", "at least one search parameter (order_id or tracking) must be provided")
-		return
-	}
-
-	var orders []models.Order
-
-	// Build query based on provided parameters
-	query := omc.DB.Model(&models.Order{})
-
-	if orderID != "" && tracking != "" {
-		// Search by both order ID and tracking (AND condition) - exact match
-		query = query.Where("order_ginee_id = ? AND tracking = ?", orderID, tracking)
-	} else if orderID != "" {
-		// Search by order ID only - exact match
-		query = query.Where("order_ginee_id = ?", orderID)
-	} else if tracking != "" {
-		// Search by tracking only - exact match
-		query = query.Where("tracking = ?", tracking)
-	}
-
-	// Get orders sorted by ID ascending
-	if err := query.Order("id ASC").
-		Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").
-		Preload("OrderDetails").Find(&orders).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search orders", err.Error())
-		return
-	}
-
-	// Check if any orders were found
-	if len(orders) == 0 {
-		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified criteria")
-		return
-	}
-
-	// Check if the found order is available for picking
-	for _, order := range orders {
-		if order.Status != "ready to pick" {
-			utils.ErrorResponse(c, http.StatusForbidden, "Order already picked", "order found but is not available for picking (status: "+order.Status+")")
-			return
-		}
-	}
-
-	// Convert to response format
-	orderResponses := make([]models.OrderResponse, len(orders))
-	for i, order := range orders {
-		orderResponses[i] = order.ToOrderResponse()
-	}
-
-	// Build success message
-	var searchTerms []string
-	if orderID != "" {
-		searchTerms = append(searchTerms, "order_id: "+orderID)
-	}
-	if tracking != "" {
-		searchTerms = append(searchTerms, "tracking: "+tracking)
-	}
-	message := fmt.Sprintf("Found %d order for search criteria: [%s]", len(orders), strings.Join(searchTerms, ", "))
-
-	utils.SuccessResponse(c, http.StatusOK, message, orderResponses)
 }
 
 // GetOrder godoc

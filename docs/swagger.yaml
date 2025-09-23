@@ -579,7 +579,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get list of all users (admin only)
+      description: Get list of all users (admin only). Optional search by username
+        or full name.
       parameters:
       - default: 1
         description: Page number
@@ -591,6 +592,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Search by username or full name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -613,7 +618,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
-      summary: Get all users
+      summary: Get all users with search capability
       tags:
       - admin
     post:
@@ -1118,7 +1123,7 @@ paths:
       consumes:
       - application/json
       description: Get list of all orders with "ready to pick" status (mobile - picker
-        only)
+        only). Optional search by order ID or tracking number.
       parameters:
       - default: 1
         description: Page number
@@ -1130,6 +1135,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Search by order ID (OrderGineeID) or tracking number
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -1152,7 +1161,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
-      summary: Get all orders for pickers
+      summary: Get all orders for pickers with search capability
       tags:
       - mobile-orders
   /api/mobile/orders/{id}:
@@ -1363,58 +1372,12 @@ paths:
       summary: Get my ongoing picking orders
       tags:
       - mobile-orders
-  /api/mobile/orders/search:
-    get:
-      consumes:
-      - application/json
-      description: Search orders by order ID (OrderGineeID) or tracking number using
-        query parameters (mobile picker only)
-      parameters:
-      - description: Order Ginee ID to search for
-        in: query
-        name: order_id
-        type: string
-      - description: Tracking number to search for
-        in: query
-        name: tracking
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/models.OrderResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Search orders by order ID or tracking number
-      tags:
-      - mobile-orders
   /api/orders:
     get:
       consumes:
       - application/json
-      description: Get list of all orders with optional date range filtering (logged-in
-        users only)
+      description: Get list of all orders with optional date range filtering and search
+        (logged-in users only)
       parameters:
       - default: 1
         description: Page number
@@ -1433,6 +1396,10 @@ paths:
       - description: End date (YYYY-MM-DD format)
         in: query
         name: end_date
+        type: string
+      - description: Search by Order ID or Tracking number
+        in: query
+        name: search
         type: string
       produces:
       - application/json
@@ -1545,57 +1512,12 @@ paths:
       summary: Bulk create orders
       tags:
       - orders
-  /api/orders/search:
-    get:
-      consumes:
-      - application/json
-      description: Search orders by order ID (OrderGineeID) or tracking number using
-        query parameters (logged-in users only)
-      parameters:
-      - description: Order Ginee ID to search for
-        in: query
-        name: order_id
-        type: string
-      - description: Tracking number to search for
-        in: query
-        name: tracking
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/models.OrderResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Search orders by order ID or tracking number
-      tags:
-      - orders
   /api/products:
     get:
       consumes:
       - application/json
-      description: Get list of all products (logged-in users only)
+      description: Get list of all products with optional search by SKU (logged-in
+        users only)
       parameters:
       - default: 1
         description: Page number
@@ -1607,6 +1529,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Search by SKU (partial match)
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -1793,51 +1719,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update product
-      tags:
-      - products
-  /api/products/search:
-    get:
-      consumes:
-      - application/json
-      description: Get specific product information by SKU using query parameter (logged-in
-        users only)
-      parameters:
-      - description: Product SKU
-        in: query
-        name: sku
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/models.ProductResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Search product by SKU
       tags:
       - products
   /api/user/profile:

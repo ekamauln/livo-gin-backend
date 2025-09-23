@@ -21,13 +21,14 @@ func NewProductController(db *gorm.DB) *ProductController {
 
 // GetProducts godoc
 // @Summary Get all products
-// @Description Get list of all products (logged-in users only)
+// @Description Get list of all products with optional search by SKU (logged-in users only)
 // @Tags products
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param search query string false "Search by SKU (partial match)"
 // @Success 200 {object} utils.Response{data=ProductsListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
@@ -38,14 +39,25 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
+	// Parse search parameter
+	search := c.Query("search")
+
 	var products []models.Product
 	var total int64
 
-	// Get total count
-	pc.DB.Model(&models.Product{}).Count(&total)
+	// Build query with optional search
+	query := pc.DB.Model(&models.Product{})
+	
+	if search != "" {
+		// Search by SKU with partial match
+		query = query.Where("sku ILIKE ?", "%"+search+"%")
+	}
 
-	// Get products with pagination and order by ID ascending
-	if err := pc.DB.Order("id ASC").Limit(limit).Offset(offset).Find(&products).Error; err != nil {
+	// Get total count with search filter
+	query.Count(&total)
+
+	// Get products with pagination, search filter, and order by ID ascending
+	if err := query.Order("id ASC").Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve products", err.Error())
 		return
 	}
@@ -65,7 +77,13 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 		},
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Products retrieved successfully", response)
+	// Build success message
+	message := "Products retrieved successfully"
+	if search != "" {
+		message += " (filtered by SKU: " + search + ")"
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
 }
 
 // GetProduct godoc
@@ -87,42 +105,6 @@ func (pc *ProductController) GetProduct(c *gin.Context) {
 	var product models.Product
 	if err := pc.DB.First(&product, productID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Product not found", err.Error())
-		return
-	}
-
-	utils.SuccessResponse(c, http.StatusOK, "Product retrieved successfully", product.ToProductResponse())
-}
-
-// GetProductBySku godoc
-// @Summary Search product by SKU
-// @Description Get specific product information by SKU using query parameter (logged-in users only)
-// @Tags products
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param sku query string true "Product SKU"
-// @Success 200 {object} utils.Response{data=models.ProductResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Router /api/products/search [get]
-func (pc *ProductController) GetProductBySku(c *gin.Context) {
-	productSKU := c.Query("sku")
-
-	// Validate that SKU parameter is provided
-	if productSKU == "" {
-		utils.ErrorResponse(c, http.StatusBadRequest, "SKU parameter is required", "sku query parameter cannot be empty")
-		return
-	}
-
-	var product models.Product
-	if err := pc.DB.Where("sku = ?", productSKU).First(&product).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			utils.ErrorResponse(c, http.StatusNotFound, "Product not found", "product with specified SKU does not exist")
-		} else {
-			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve product", err.Error())
-		}
 		return
 	}
 

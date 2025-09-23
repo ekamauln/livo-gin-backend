@@ -24,7 +24,7 @@ func NewOrderController(db *gorm.DB) *OrderController {
 
 // GetOrders godoc
 // @Summary Get all orders
-// @Description Get list of all orders with optional date range filtering (logged-in users only)
+// @Description Get list of all orders with optional date range filtering and search (logged-in users only)
 // @Tags orders
 // @Accept json
 // @Produce json
@@ -33,6 +33,7 @@ func NewOrderController(db *gorm.DB) *OrderController {
 // @Param limit query int false "Items per page" default(10)
 // @Param start_date query string false "Start date (YYYY-MM-DD format)"
 // @Param end_date query string false "End date (YYYY-MM-DD format)"
+// @Param search query string false "Search by Order ID or Tracking number"
 // @Success 200 {object} utils.Response{data=OrdersListResponse}
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
@@ -47,6 +48,9 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	// Parse date range parameters
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
+
+	// Parse search parameter
+	search := c.Query("search")
 
 	var orders []models.Order
 	var total int64
@@ -78,10 +82,16 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 		}
 	}
 
-	// Get total count with date filters
+	// Apply search filter if provided
+	if search != "" {
+		// Search in both order_ginee_id and tracking fields
+		query = query.Where("order_ginee_id ILIKE ? OR tracking ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Get total count with all filters
 	query.Count(&total)
 
-	// Get orders with pagination, date filters, sorted by ID ascending
+	// Get orders with pagination, filters, sorted by ID ascending
 	if err := query.Order("id ASC").Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve orders", err.Error())
 		return
@@ -104,6 +114,8 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 
 	// Build success message
 	message := "Orders retrieved successfully"
+	var filters []string
+	
 	if startDate != "" || endDate != "" {
 		var dateRange []string
 		if startDate != "" {
@@ -112,78 +124,18 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 		if endDate != "" {
 			dateRange = append(dateRange, "to: "+endDate)
 		}
-		message += fmt.Sprintf(" (filtered by date: %s)", strings.Join(dateRange, ", "))
+		filters = append(filters, "date: "+strings.Join(dateRange, ", "))
+	}
+	
+	if search != "" {
+		filters = append(filters, "search: "+search)
+	}
+	
+	if len(filters) > 0 {
+		message += fmt.Sprintf(" (filtered by %s)", strings.Join(filters, " | "))
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, message, response)
-}
-
-// SearchOrders godoc
-// @Summary Search orders by order ID or tracking number
-// @Description Search orders by order ID (OrderGineeID) or tracking number using query parameters (logged-in users only)
-// @Tags orders
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param order_id query string false "Order Ginee ID to search for"
-// @Param tracking query string false "Tracking number to search for"
-// @Success 200 {object} utils.Response{data=[]models.OrderResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Router /api/orders/search [get]
-func (oc *OrderController) SearchOrders(c *gin.Context) {
-	// Parse search parameters
-	orderID := c.Query("order_id")
-	tracking := c.Query("tracking")
-
-	// Validate that at least one search parameter is provided
-	if orderID == "" && tracking == "" {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Search parameter required", "at least one search parameter (order_id or tracking) must be provided")
-		return
-	}
-
-	var orders []models.Order
-
-	// Build the query based on search parameters
-	query := oc.DB.Model(&models.Order{})
-
-	if orderID != "" && tracking != "" {
-		// Search by both order ID and tracking (AND condition)
-		query = query.Where("order_ginee_id ILIKE ? AND tracking ILIKE ?", "%"+orderID+"%", "%"+tracking+"%")
-	} else if orderID != "" {
-		// Search by order ID only
-		query = query.Where("order_ginee_id ILIKE ?", "%"+orderID+"%")
-	} else if tracking != "" {
-		// Search by tracking only
-		query = query.Where("tracking ILIKE ?", "%"+tracking+"%")
-	}
-
-	// Get orders sorted by ID ascending
-	if err := query.Order("id ASC").
-		Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").
-		Preload("OrderDetails").Find(&orders).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to search orders", err.Error())
-		return
-	}
-
-	// Convert to response format
-	orderResponses := make([]models.OrderResponse, len(orders))
-	for i, order := range orders {
-		orderResponses[i] = order.ToOrderResponse()
-	}
-
-	// Build success message
-	var searchTerms []string
-	if orderID != "" {
-		searchTerms = append(searchTerms, "order_id: "+orderID)
-	}
-	if tracking != "" {
-		searchTerms = append(searchTerms, "tracking: "+tracking)
-	}
-	message := fmt.Sprintf("Found %d order for search criteria: [%s]", len(orders), strings.Join(searchTerms, ", "))
-
-	utils.SuccessResponse(c, http.StatusOK, message, orderResponses)
 }
 
 // CreateOrder godoc

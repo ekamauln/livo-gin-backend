@@ -15,9 +15,8 @@ func SetupProductRoutes(api *gin.RouterGroup, cfg *config.Config, productControl
 	product.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public product routes
-		product.GET("", productController.GetProducts)            // Get all products
-		product.GET("/:id", productController.GetProduct)         // Get product by ID
-		product.GET("/search", productController.GetProductBySku) // Get product by SKU
+		product.GET("", productController.GetProducts)    // Get all products (with optional search)
+		product.GET("/:id", productController.GetProduct) // Get product by ID
 
 		// Admin product management routes (admin, manager roles)
 		productAdmin := product.Group("")

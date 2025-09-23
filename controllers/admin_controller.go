@@ -5,6 +5,7 @@ import (
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,14 +21,15 @@ func NewAdminController(db *gorm.DB) *AdminController {
 }
 
 // GetUsers godoc
-// @Summary Get all users
-// @Description Get list of all users (admin only)
+// @Summary Get all users with search capability
+// @Description Get list of all users (admin only). Optional search by username or full name.
 // @Tags admin
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param search query string false "Search by username or full name"
 // @Success 200 {object} utils.Response{data=UsersListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
@@ -38,14 +40,27 @@ func (ac *AdminController) GetUsers(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
+	// Parse search parameter
+	search := strings.TrimSpace(c.Query("search"))
+
 	var users []models.User
 	var total int64
 
+	// Build base query
+	query := ac.DB.Model(&models.User{})
+
+	// Add search conditions if search parameter is provided
+	if search != "" {
+		searchCondition := "username ILIKE ? OR full_name ILIKE ?"
+		searchPattern := "%" + search + "%"
+		query = query.Where(searchCondition, searchPattern, searchPattern)
+	}
+
 	// Get total count
-	ac.DB.Model(&models.User{}).Count(&total)
+	query.Count(&total)
 
 	// Get users with pagination and order by ID ascending
-	if err := ac.DB.Order("id ASC").Preload("UserRoles.Role").Preload("UserRoles.Assigner").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+	if err := query.Order("id ASC").Preload("UserRoles.Role").Preload("UserRoles.Assigner").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve users", err.Error())
 		return
 	}
