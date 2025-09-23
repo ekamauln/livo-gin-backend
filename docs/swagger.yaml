@@ -1318,6 +1318,52 @@ paths:
       summary: Get my ongoing picking orders
       tags:
       - mobile-orders
+  /api/mobile/orders/search:
+    get:
+      consumes:
+      - application/json
+      description: Search orders by order ID (OrderGineeID) or tracking number using
+        query parameters (mobile picker only)
+      parameters:
+      - description: Order Ginee ID to search for
+        in: query
+        name: order_id
+        type: string
+      - description: Tracking number to search for
+        in: query
+        name: tracking
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.OrderResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Search orders by order ID or tracking number
+      tags:
+      - mobile-orders
   /api/orders:
     get:
       consumes:
