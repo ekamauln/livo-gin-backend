@@ -115,7 +115,7 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	// Build success message
 	message := "Orders retrieved successfully"
 	var filters []string
-	
+
 	if startDate != "" || endDate != "" {
 		var dateRange []string
 		if startDate != "" {
@@ -126,16 +126,45 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 		}
 		filters = append(filters, "date: "+strings.Join(dateRange, ", "))
 	}
-	
+
 	if search != "" {
 		filters = append(filters, "search: "+search)
 	}
-	
+
 	if len(filters) > 0 {
 		message += fmt.Sprintf(" (filtered by %s)", strings.Join(filters, " | "))
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
+// GetOrder godoc
+// @Summary Get order by ID
+// @Description Get specific order information with complete details (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} utils.Response{data=models.OrderResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id} [get]
+func (oc *OrderController) GetOrder(c *gin.Context) {
+	orderID := c.Param("id")
+	var order models.Order
+
+	if err := oc.DB.Preload("OrderDetails").Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve order", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Order retrieved successfully", order.ToOrderResponse())
 }
 
 // CreateOrder godoc
@@ -311,6 +340,276 @@ func (oc *OrderController) BulkCreateOrders(c *gin.Context) {
 	utils.SuccessResponse(c, statusCode, message, response)
 }
 
+// GetOrderDetails godoc
+// @Summary Get order details
+// @Description Get order ID, tracking and all order details of a specific order by ID (logged-in users only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} utils.Response{data=OrderDetailsOnlyResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id}/details [get]
+func (oc *OrderController) GetOrderDetails(c *gin.Context) {
+	orderID := c.Param("id")
+	var order models.Order
+
+	if err := oc.DB.Preload("OrderDetails").First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve order", err.Error())
+		return
+	}
+
+	// Convert order details to response format
+	orderDetails := make([]OrderDetailResponse, len(order.OrderDetails))
+	for i, detail := range order.OrderDetails {
+		orderDetails[i] = OrderDetailResponse{
+			ID:          detail.ID,
+			Sku:         detail.Sku,
+			ProductName: detail.ProductName,
+			Variant:     detail.Variant,
+			Quantity:    detail.Quantity,
+		}
+	}
+
+	// Create custom response with only order_ginee_id, tracking, and order details
+	response := OrderDetailsOnlyResponse{
+		OrderGineeID: order.OrderGineeID,
+		Tracking:     order.Tracking,
+		OrderDetails: orderDetails,
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Order details retrieved successfully", response)
+}
+
+// Add these new endpoints after the GetOrderDetails function
+
+// UpdateOrderDetail godoc
+// @Summary Update order detail
+// @Description Update a specific order detail by ID (admin only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param detail_id path int true "Order Detail ID"
+// @Param request body UpdateOrderDetailRequest true "Update order detail request"
+// @Success 200 {object} utils.Response{data=OrderDetailResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id}/details/{detail_id} [put]
+func (oc *OrderController) UpdateOrderDetail(c *gin.Context) {
+	orderID := c.Param("id")
+	detailID := c.Param("detail_id")
+
+	var req UpdateOrderDetailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Verify order exists
+	var order models.Order
+	if err := oc.DB.First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order", err.Error())
+		return
+	}
+
+	// Check if order status allows modification
+	if order.Status != "ready to pick" {
+		utils.ErrorResponse(c, http.StatusForbidden, "Order modification not allowed", fmt.Sprintf("cannot modify order details when status is '%s'. Order must be in 'ready to pick' status", order.Status))
+		return
+	}
+
+	// Find and update the order detail
+	var orderDetail models.OrderDetail
+	if err := oc.DB.Where("id = ? AND order_id = ?", detailID, orderID).First(&orderDetail).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order detail not found", "no order detail found with the specified ID for this order")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order detail", err.Error())
+		return
+	}
+
+	// Update fields
+	orderDetail.Sku = req.Sku
+	orderDetail.ProductName = req.ProductName
+	orderDetail.Variant = req.Variant
+	orderDetail.Quantity = req.Quantity
+
+	if err := oc.DB.Save(&orderDetail).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update order detail", err.Error())
+		return
+	}
+
+	response := OrderDetailResponse{
+		ID:          orderDetail.ID,
+		Sku:         orderDetail.Sku,
+		ProductName: orderDetail.ProductName,
+		Variant:     orderDetail.Variant,
+		Quantity:    orderDetail.Quantity,
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Order detail updated successfully", response)
+}
+
+// AddOrderDetail godoc
+// @Summary Add new order detail
+// @Description Add a new order detail to an existing order (admin only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param request body CreateOrderDetailRequest true "Add order detail request"
+// @Success 201 {object} utils.Response{data=OrderDetailResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id}/details [post]
+func (oc *OrderController) AddOrderDetail(c *gin.Context) {
+	orderID := c.Param("id")
+
+	var req CreateOrderDetailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Verify order exists
+	var order models.Order
+	if err := oc.DB.First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order", err.Error())
+		return
+	}
+
+	// Check if order status allows modification
+	if order.Status != "ready to pick" {
+		utils.ErrorResponse(c, http.StatusForbidden, "Order modification not allowed", fmt.Sprintf("cannot add order details when status is '%s'. Order must be in 'ready to pick' status", order.Status))
+		return
+	}
+
+	// Convert string ID to uint
+	orderIDUint, err := strconv.ParseUint(orderID, 10, 32)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid order ID", "order ID must be a valid number")
+		return
+	}
+
+	// Create new order detail
+	orderDetail := models.OrderDetail{
+		OrderID:     uint(orderIDUint),
+		Sku:         req.Sku,
+		ProductName: req.ProductName,
+		Variant:     req.Variant,
+		Quantity:    req.Quantity,
+	}
+
+	if err := oc.DB.Create(&orderDetail).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to add order detail", err.Error())
+		return
+	}
+
+	response := OrderDetailResponse{
+		ID:          orderDetail.ID,
+		Sku:         orderDetail.Sku,
+		ProductName: orderDetail.ProductName,
+		Variant:     orderDetail.Variant,
+		Quantity:    orderDetail.Quantity,
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, "Order detail added successfully", response)
+}
+
+// RemoveOrderDetail godoc
+// @Summary Remove order detail
+// @Description Remove a specific order detail from an order (admin only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param detail_id path int true "Order Detail ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id}/details/{detail_id} [delete]
+func (oc *OrderController) RemoveOrderDetail(c *gin.Context) {
+	orderID := c.Param("id")
+	detailID := c.Param("detail_id")
+
+	// Verify order exists
+	var order models.Order
+	if err := oc.DB.First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order", err.Error())
+		return
+	}
+
+	// Check if order status allows modification
+	if order.Status != "ready to pick" {
+		utils.ErrorResponse(c, http.StatusForbidden, "Order modification not allowed", fmt.Sprintf("cannot remove order details when status is '%s'. Order must be in 'ready to pick' status", order.Status))
+		return
+	}
+
+	// Check if this is the last order detail
+	var detailCount int64
+	oc.DB.Model(&models.OrderDetail{}).Where("order_id = ?", orderID).Count(&detailCount)
+	if detailCount <= 1 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Cannot remove order detail", "order must have at least one order detail")
+		return
+	}
+
+	// Find and delete the order detail
+	var orderDetail models.OrderDetail
+	if err := oc.DB.Where("id = ? AND order_id = ?", detailID, orderID).First(&orderDetail).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order detail not found", "no order detail found with the specified ID for this order")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order detail", err.Error())
+		return
+	}
+
+	if err := oc.DB.Delete(&orderDetail).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to remove order detail", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Order detail removed successfully", nil)
+}
+
+// Add this struct after the existing structs
+type UpdateOrderDetailRequest struct {
+	Sku         string `json:"sku" binding:"required" example:"PROD001"`
+	ProductName string `json:"product_name" binding:"required" example:"Updated Product"`
+	Variant     string `json:"variant" example:"Blue - Size L"`
+	Quantity    int    `json:"quantity" binding:"required,min=1" example:"3"`
+}
+
 type OrdersListResponse struct {
 	Orders     []models.OrderResponse `json:"orders"`
 	Pagination PaginationResponse     `json:"pagination"`
@@ -362,4 +661,18 @@ type FailedOrder struct {
 	Index        int    `json:"index"`
 	OrderGineeID string `json:"order_id"`
 	Error        string `json:"error"`
+}
+
+type OrderDetailResponse struct {
+	ID          uint   `json:"id"`
+	Sku         string `json:"sku"`
+	ProductName string `json:"product_name"`
+	Variant     string `json:"variant"`
+	Quantity    int    `json:"quantity"`
+}
+
+type OrderDetailsOnlyResponse struct {
+	OrderGineeID string                `json:"order_id"`
+	Tracking     string                `json:"tracking"`
+	OrderDetails []OrderDetailResponse `json:"order_details"`
 }

@@ -264,6 +264,30 @@ definitions:
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
     type: object
+  controllers.OrderDetailResponse:
+    properties:
+      id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      variant:
+        type: string
+    type: object
+  controllers.OrderDetailsOnlyResponse:
+    properties:
+      order_details:
+        items:
+          $ref: '#/definitions/controllers.OrderDetailResponse'
+        type: array
+      order_id:
+        type: string
+      tracking:
+        type: string
+    type: object
   controllers.OrdersListResponse:
     properties:
       orders:
@@ -337,6 +361,26 @@ definitions:
         type: string
       reason:
         type: string
+    type: object
+  controllers.UpdateOrderDetailRequest:
+    properties:
+      product_name:
+        example: Updated Product
+        type: string
+      quantity:
+        example: 3
+        minimum: 1
+        type: integer
+      sku:
+        example: PROD001
+        type: string
+      variant:
+        example: Blue - Size L
+        type: string
+    required:
+    - product_name
+    - quantity
+    - sku
     type: object
   controllers.UpdateProductRequest:
     properties:
@@ -1468,6 +1512,235 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new order
+      tags:
+      - orders
+  /api/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get specific order information with complete details (logged-in
+        users only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.OrderResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - orders
+  /api/orders/{id}/details:
+    get:
+      consumes:
+      - application/json
+      description: Get order ID, tracking and all order details of a specific order
+        by ID (logged-in users only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OrderDetailsOnlyResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get order details
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Add a new order detail to an existing order (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Add order detail request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateOrderDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OrderDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Add new order detail
+      tags:
+      - orders
+  /api/orders/{id}/details/{detail_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a specific order detail from an order (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order Detail ID
+        in: path
+        name: detail_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove order detail
+      tags:
+      - orders
+    put:
+      consumes:
+      - application/json
+      description: Update a specific order detail by ID (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order Detail ID
+        in: path
+        name: detail_id
+        required: true
+        type: integer
+      - description: Update order detail request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateOrderDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OrderDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update order detail
       tags:
       - orders
   /api/orders/bulk:

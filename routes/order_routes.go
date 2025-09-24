@@ -16,7 +16,14 @@ func SetupOrderRoutes(api *gin.RouterGroup, cfg *config.Config, orderController 
 	{
 		// Public order routes
 		order.GET("", orderController.GetOrders)              // Get all orders (with optional search and date filtering)
+		order.GET("/:id", orderController.GetOrder)           // Get specific order by ID (full details)
 		order.POST("", orderController.CreateOrder)           // Create new order
 		order.POST("/bulk", orderController.BulkCreateOrders) // Create multiple orders
+
+		// Public order details route
+		order.GET("/:id/details", orderController.GetOrderDetails)                 // Get order details
+		order.POST("/:id/details", orderController.AddOrderDetail)                 // Add new order detail to an order
+		order.PUT("/:id/details/:detail_id", orderController.UpdateOrderDetail)    // Update specific order detail
+		order.DELETE("/:id/details/:detail_id", orderController.RemoveOrderDetail) // Remove specific order detail
 	}
 }
