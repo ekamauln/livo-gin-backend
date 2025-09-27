@@ -47,7 +47,7 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 
 	// Build query with optional search
 	query := pc.DB.Model(&models.Product{})
-	
+
 	if search != "" {
 		// Search by SKU with partial match
 		query = query.Where("sku ILIKE ?", "%"+search+"%")
@@ -144,6 +144,8 @@ func (pc *ProductController) UpdateProduct(c *gin.Context) {
 	product.Name = req.Name
 	product.Image = req.Image
 	product.Variant = req.Variant
+	product.Location = req.Location
+	product.Barcode = req.Barcode
 	if err := pc.DB.Save(&product).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update product", err.Error())
 		return
@@ -203,10 +205,12 @@ func (pc *ProductController) CreateProduct(c *gin.Context) {
 	}
 
 	product := models.Product{
-		Sku:     req.Sku,
-		Name:    req.Name,
-		Image:   req.Image,
-		Variant: req.Variant,
+		Sku:      req.Sku,
+		Name:     req.Name,
+		Image:    req.Image,
+		Variant:  req.Variant,
+		Location: req.Location,
+		Barcode:  req.Barcode,
 	}
 
 	// Create a new product and return the response
@@ -225,14 +229,18 @@ type ProductsListResponse struct {
 }
 
 type UpdateProductRequest struct {
-	Name    string `json:"name" binding:"required"`
-	Image   string `json:"image" binding:"required"`
-	Variant string `json:"variant" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Image    string `json:"image" binding:"required"`
+	Variant  string `json:"variant" binding:"required"`
+	Location string `json:"location" binding:"required"`
+	Barcode  string `json:"barcode" binding:"required"`
 }
 
 type CreateProductRequest struct {
-	Sku     string `json:"sku" binding:"required,alphanum"`
-	Name    string `json:"name" binding:"required"`
-	Image   string `json:"image" binding:"required"`
-	Variant string `json:"variant" binding:"required"`
+	Sku      string `json:"sku" binding:"required,alphanum"`
+	Name     string `json:"name" binding:"required"`
+	Image    string `json:"image" binding:"required"`
+	Variant  string `json:"variant" binding:"required"`
+	Location string `json:"location" binding:"required"`
+	Barcode  string `json:"barcode" binding:"required"`
 }

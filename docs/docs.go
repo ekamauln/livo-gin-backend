@@ -2587,13 +2587,21 @@ const docTemplate = `{
         "controllers.CreateProductRequest": {
             "type": "object",
             "required": [
+                "barcode",
                 "image",
+                "location",
                 "name",
                 "sku",
                 "variant"
             ],
             "properties": {
+                "barcode": {
+                    "type": "string"
+                },
                 "image": {
+                    "type": "string"
+                },
+                "location": {
                     "type": "string"
                 },
                 "name": {
@@ -3000,12 +3008,20 @@ const docTemplate = `{
         "controllers.UpdateProductRequest": {
             "type": "object",
             "required": [
+                "barcode",
                 "image",
+                "location",
                 "name",
                 "variant"
             ],
             "properties": {
+                "barcode": {
+                    "type": "string"
+                },
                 "image": {
+                    "type": "string"
+                },
+                "location": {
                     "type": "string"
                 },
                 "name": {
