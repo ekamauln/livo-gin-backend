@@ -177,6 +177,16 @@ definitions:
     - sku
     - variant
     type: object
+  controllers.CreateStoreRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
   controllers.CreateUserRequest:
     properties:
       email:
@@ -431,6 +441,15 @@ definitions:
       reason:
         type: string
     type: object
+  controllers.StoresListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      stores:
+        items:
+          $ref: '#/definitions/models.StoreResponse'
+        type: array
+    type: object
   controllers.UpdateBoxRequest:
     properties:
       code:
@@ -525,6 +544,16 @@ definitions:
       password:
         example: newpassword123
         type: string
+    type: object
+  controllers.UpdateStoreRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
     type: object
   controllers.UpdateUserPasswordRequest:
     properties:
@@ -697,6 +726,19 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  models.StoreResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
         type: string
     type: object
   models.UserResponse:
@@ -2833,6 +2875,215 @@ paths:
       summary: Update product
       tags:
       - products
+  /api/stores:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all stores with optional search by Code or Name (logged-in
+        users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by Code or Name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.StoresListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all stores
+      tags:
+      - stores
+    post:
+      consumes:
+      - application/json
+      description: Create a new store (logged-in users only)
+      parameters:
+      - description: Create Store Request
+        in: body
+        name: store
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateStoreRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StoreResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new store
+      tags:
+      - stores
+  /api/stores/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a store (logged-in users only)
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove store
+      tags:
+      - stores
+    get:
+      consumes:
+      - application/json
+      description: Get specific store by ID (logged-in users only)
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StoreResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get store by ID
+      tags:
+      - stores
+    put:
+      consumes:
+      - application/json
+      description: Update store information (logged-in users only)
+      parameters:
+      - description: Store ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Store Request
+        in: body
+        name: store
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateStoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.StoreResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update store
+      tags:
+      - stores
   /api/user/profile:
     get:
       consumes:

@@ -51,9 +51,10 @@ func main() {
 	boxController := controllers.NewBoxController(db)
 	expeditionController := controllers.NewExpeditionController(db)
 	channelController := controllers.NewChannelController(db)
+	storeController := controllers.NewStoreController(db)
 
 	// Setup routes
-	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController)
+	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

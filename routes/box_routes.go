@@ -20,6 +20,5 @@ func SetupBoxRoutes(api *gin.RouterGroup, cfg *config.Config, boxController *con
 		box.GET("/:id", boxController.GetBox)       // Get box by ID
 		box.PUT("/:id", boxController.UpdateBox)    // Update box by ID
 		box.DELETE("/:id", boxController.RemoveBox) // Delete box by ID
-
 	}
 }
