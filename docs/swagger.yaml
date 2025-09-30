@@ -8,6 +8,15 @@ definitions:
     required:
     - role_name
     type: object
+  controllers.BoxesListResponse:
+    properties:
+      boxes:
+        items:
+          $ref: '#/definitions/models.BoxResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+    type: object
   controllers.BulkCreateOrderRequest:
     properties:
       orders:
@@ -45,6 +54,25 @@ definitions:
         type: integer
       total:
         type: integer
+    type: object
+  controllers.ChannelsListResponse:
+    properties:
+      channels:
+        items:
+          $ref: '#/definitions/models.ChannelResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+    type: object
+  controllers.CreateBoxRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
     type: object
   controllers.CreateOrderDetailRequest:
     properties:
@@ -368,6 +396,34 @@ definitions:
       reason:
         type: string
     type: object
+  controllers.UpdateBoxRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  controllers.UpdateChannelRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  controllers.UpdateComplainedStatusRequest:
+    properties:
+      complained:
+        example: true
+        type: boolean
+    required:
+    - complained
+    type: object
   controllers.UpdateOrderDetailRequest:
     properties:
       product_name:
@@ -453,6 +509,33 @@ definitions:
           $ref: '#/definitions/models.UserResponse'
         type: array
     type: object
+  models.BoxResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ChannelResponse:
+    properties:
+      code:
+        example: SP
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   models.OrderDetailResponse:
     properties:
       id:
@@ -472,6 +555,8 @@ definitions:
         type: string
       channel:
         type: string
+      complained:
+        type: boolean
       courier:
         type: string
       created_at:
@@ -1174,6 +1259,382 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/boxes:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all boxes (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by box code (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.BoxesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all boxes
+      tags:
+      - boxes
+    post:
+      consumes:
+      - application/json
+      description: Create a new box (logged-in users only)
+      parameters:
+      - description: Create box request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateBoxRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoxResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new box
+      tags:
+      - boxes
+  /api/boxes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a box (logged-in users only)
+      parameters:
+      - description: Box ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove box
+      tags:
+      - boxes
+    get:
+      consumes:
+      - application/json
+      description: Get box details by ID (logged-in users only)
+      parameters:
+      - description: Box ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoxResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get box by ID
+      tags:
+      - boxes
+    put:
+      consumes:
+      - application/json
+      description: Update box information (logged-in users only)
+      parameters:
+      - description: Box ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update box request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateBoxRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoxResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update box
+      tags:
+      - boxes
+  /api/channels:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all channels (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by Code or Name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ChannelsListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all channels
+      tags:
+      - channels
+  /api/channels/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a channel (logged-in users only)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove channel
+      tags:
+      - channels
+    get:
+      consumes:
+      - application/json
+      description: Get specific channel by ID (logged-in users only)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ChannelResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get channel by ID
+      tags:
+      - channels
+    put:
+      consumes:
+      - application/json
+      description: Update specific channel information (logged-in users only)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update channel request
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ChannelResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update channel
+      tags:
+      - channels
   /api/mobile/orders:
     get:
       consumes:
@@ -1565,6 +2026,56 @@ paths:
       security:
       - BearerAuth: []
       summary: Get order by ID
+      tags:
+      - orders
+  /api/orders/{id}/complained:
+    put:
+      consumes:
+      - application/json
+      description: Update the complained status of an order (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update complained status request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateComplainedStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update order complained status
       tags:
       - orders
   /api/orders/{id}/details:

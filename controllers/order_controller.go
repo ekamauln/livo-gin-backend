@@ -22,6 +22,67 @@ func NewOrderController(db *gorm.DB) *OrderController {
 	return &OrderController{DB: db}
 }
 
+// UpdateOrderComplainedStatus godoc
+// @Summary Update order complained status
+// @Description Update the complained status of an order (admin only)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param request body UpdateComplainedStatusRequest true "Update complained status request"
+// @Success 200 {object} utils.Response{data=models.OrderResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Router /api/orders/{id}/complained [put]
+func (oc *OrderController) UpdateOrderComplainedStatus(c *gin.Context) {
+	orderID := c.Param("id")
+
+	var req UpdateComplainedStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Find the order
+	var order models.Order
+	if err := oc.DB.First(&order, orderID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find order", err.Error())
+		return
+	}
+
+	// Update complained status
+	order.Complained = req.Complained
+
+	if err := oc.DB.Save(&order).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update order complained status", err.Error())
+		return
+	}
+
+	// Load order with details for response
+	oc.DB.Preload("OrderDetails").Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").First(&order, order.ID)
+
+	message := "Order complained status updated successfully"
+	if req.Complained {
+		message = "Order marked as complained"
+	} else {
+		message = "Order unmarked as complained"
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, message, order.ToOrderResponse())
+}
+
+// Add this struct with the other request structs
+type UpdateComplainedStatusRequest struct {
+	Complained bool `json:"complained" binding:"required" example:"true"`
+}
+
 // GetOrders godoc
 // @Summary Get all orders
 // @Description Get list of all orders with optional date range filtering and search (logged-in users only)

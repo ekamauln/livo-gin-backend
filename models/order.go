@@ -14,9 +14,10 @@ type Order struct {
 	Store        string         `json:"store" example:"SP deParcelRibbon"`
 	Buyer        string         `json:"buyer" example:"John Doe"`
 	Courier      string         `json:"courier" example:"JNE"`
-	Tracking     string         `gorm:"index" json:"tracking" example:"JNE1234567890"`
+	Tracking     string         `gorm:"unique;not null" json:"tracking" example:"JNE1234567890"`
 	PickerID     *uint          `gorm:"default:null" json:"picker_id"`
 	PickedAt     *time.Time     `gorm:"default:null" json:"picked_at"`
+	Complained   bool           `gorm:"default:false" json:"complained" example:"false"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
@@ -47,11 +48,12 @@ type OrderResponse struct {
 	Buyer        string                `json:"buyer"`
 	Courier      string                `json:"courier"`
 	Tracking     string                `json:"tracking"`
+	Complained   bool                  `json:"complained"`
+	PickedBy     string                `json:"picked_by"`
+	PickedAt     string                `json:"picked_at"`
 	CreatedAt    time.Time             `json:"created_at"`
 	UpdatedAt    time.Time             `json:"updated_at"`
 	OrderDetails []OrderDetailResponse `json:"order_details"`
-	PickedBy     string                `json:"picked_by"`
-	PickedAt     string                `json:"picked_at"`
 }
 
 type OrderDetailResponse struct {
@@ -100,6 +102,7 @@ func (o *Order) ToOrderResponse() OrderResponse {
 		Buyer:        o.Buyer,
 		Courier:      o.Courier,
 		Tracking:     o.Tracking,
+		Complained:   o.Complained,
 		CreatedAt:    o.CreatedAt,
 		UpdatedAt:    o.UpdatedAt,
 		PickedBy:     pickedByStr,

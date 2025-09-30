@@ -48,9 +48,10 @@ func main() {
 	productController := controllers.NewProductController(db)
 	orderController := controllers.NewOrderController(db)
 	orderMobileController := controllers.NewOrderMobileController(db)
+	boxController := controllers.NewBoxController(db)
 
 	// Setup routes
-	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController)
+	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

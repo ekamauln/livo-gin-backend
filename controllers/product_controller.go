@@ -141,6 +141,7 @@ func (pc *ProductController) UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	// Update product fields
 	product.Name = req.Name
 	product.Image = req.Image
 	product.Variant = req.Variant
