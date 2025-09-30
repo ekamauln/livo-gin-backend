@@ -74,6 +74,32 @@ definitions:
     - code
     - name
     type: object
+  controllers.CreateChannelRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  controllers.CreateExpeditionRequest:
+    properties:
+      code:
+        type: string
+      color:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+    required:
+    - code
+    - color
+    - name
+    - slug
+    type: object
   controllers.CreateOrderDetailRequest:
     properties:
       product_name:
@@ -179,6 +205,15 @@ definitions:
     - full_name
     - password
     - username
+    type: object
+  controllers.ExpeditionsListResponse:
+    properties:
+      expeditions:
+        items:
+          $ref: '#/definitions/models.ExpeditionResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
     type: object
   controllers.FailedOrder:
     properties:
@@ -424,6 +459,22 @@ definitions:
     required:
     - complained
     type: object
+  controllers.UpdateExpeditionRequest:
+    properties:
+      code:
+        type: string
+      color:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+    required:
+    - code
+    - color
+    - name
+    - slug
+    type: object
   controllers.UpdateOrderDetailRequest:
     properties:
       product_name:
@@ -532,6 +583,23 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ExpeditionResponse:
+    properties:
+      code:
+        type: string
+      color:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
         type: string
       updated_at:
         type: string
@@ -1512,6 +1580,46 @@ paths:
       summary: Get all channels
       tags:
       - channels
+    post:
+      consumes:
+      - application/json
+      description: Create a new channel (logged-in users only)
+      parameters:
+      - description: Create channel request
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ChannelResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new channel
+      tags:
+      - channels
   /api/channels/{id}:
     delete:
       consumes:
@@ -1635,6 +1743,214 @@ paths:
       summary: Update channel
       tags:
       - channels
+  /api/expeditions:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all expeditions (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by Code or Name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ExpeditionsListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all expeditions
+      tags:
+      - expeditions
+    post:
+      consumes:
+      - application/json
+      description: Create a new expedition (logged-in users only)
+      parameters:
+      - description: Create expedition request
+        in: body
+        name: expedition
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateExpeditionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ExpeditionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new expedition
+      tags:
+      - expeditions
+  /api/expeditions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete expedition (logged-in users only)
+      parameters:
+      - description: Expedition ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove expedition
+      tags:
+      - expeditions
+    get:
+      consumes:
+      - application/json
+      description: Get expedition details by ID (logged-in users only)
+      parameters:
+      - description: Expedition ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ExpeditionResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get expedition by ID
+      tags:
+      - expeditions
+    put:
+      consumes:
+      - application/json
+      description: Update expedition (logged-in users only)
+      parameters:
+      - description: Expedition ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Expedition data
+        in: body
+        name: expedition
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateExpeditionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ExpeditionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update expedition
+      tags:
+      - expeditions
   /api/mobile/orders:
     get:
       consumes:

@@ -21,6 +21,7 @@ type ExpeditionResponse struct {
 	ID      uint      `json:"id"`
 	Code    string    `json:"code"`
 	Name    string    `json:"name"`
+	Slug    string    `json:"slug"`
 	Color   string    `json:"color"`
 	Created time.Time `json:"created_at"`
 	Updated time.Time `json:"updated_at"`
@@ -32,6 +33,7 @@ func (e *Expedition) ToExpeditionResponse() ExpeditionResponse {
 		ID:      e.ID,
 		Code:    e.Code,
 		Name:    e.Name,
+		Slug:    e.Slug,
 		Color:   e.Color,
 		Created: e.CreatedAt,
 		Updated: e.UpdatedAt,

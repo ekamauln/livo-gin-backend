@@ -190,6 +190,47 @@ func (cc *ChannelController) RemoveChannel(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Channel removed successfully", nil)
 }
 
+// CreateChannel godoc
+// @Summary Create new channel
+// @Description Create a new channel (logged-in users only)
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param channel body CreateChannelRequest true "Create channel request"
+// @Success 201 {object} utils.Response{data=models.ChannelResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/channels [post]
+func (cc *ChannelController) CreateChannel(c *gin.Context) {
+	var req CreateChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	channel := models.Channel{
+		Code: req.Code,
+		Name: req.Name,
+	}
+
+	// Check for duplicate channel code
+	var existingChannel models.Channel
+	if err := cc.DB.Where("code = ?", req.Code).First(&existingChannel).Error; err == nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Channel code already exists", "A channel with this code already exists")
+		return
+	}
+
+	// Create a new channel and return the response
+	if err := cc.DB.Create(&channel).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create channel", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, "Channel created successfully", channel.ToChannelResponse())
+}
+
 // Request/Response structs
 type ChannelsListResponse struct {
 	Channels   []models.ChannelResponse `json:"channels"`
