@@ -116,7 +116,10 @@ func (qcr *QcRibbon) LoadOrder(db *gorm.DB) error {
 	}
 
 	var order Order
-	if err := db.Preload("OrderDetails").Where("order_ginee_id = ?", qcr.Tracking).First(&order).Error; err != nil {
+	if err := db.Where("tracking = ?", qcr.Tracking).Preload("OrderDetails").
+		Preload("Picker.UserRoles.Role").
+		Preload("Picker.UserRoles.Assigner").
+		First(&order).Error; err != nil {
 		return err
 	}
 

@@ -108,6 +108,14 @@ definitions:
     required:
     - tracking
     type: object
+  controllers.CreateMbRibbonRequest:
+    properties:
+      tracking:
+        example: JNE1234567890
+        type: string
+    required:
+    - tracking
+    type: object
   controllers.CreateOrderDetailRequest:
     properties:
       product_name:
@@ -184,6 +192,19 @@ definitions:
     - name
     - sku
     - variant
+    type: object
+  controllers.CreateQcRibbonRequest:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/controllers.QcRibbonDetailRequest'
+        type: array
+      tracking:
+        example: 250925AASB6BSDJUI3C
+        type: string
+    required:
+    - details
+    - tracking
     type: object
   controllers.CreateStoreRequest:
     properties:
@@ -268,6 +289,15 @@ definitions:
       mb_onlines:
         items:
           $ref: '#/definitions/models.MbOnlineResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+    type: object
+  controllers.MbRibbonsListResponse:
+    properties:
+      mb_ribbons:
+        items:
+          $ref: '#/definitions/models.MbRibbonResponse'
         type: array
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
@@ -409,6 +439,28 @@ definitions:
       products:
         items:
           $ref: '#/definitions/models.ProductResponse'
+        type: array
+    type: object
+  controllers.QcRibbonDetailRequest:
+    properties:
+      box_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 5
+        minimum: 1
+        type: integer
+    required:
+    - box_id
+    - quantity
+    type: object
+  controllers.QcRibbonsListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      qc_ribbons:
+        items:
+          $ref: '#/definitions/models.QcRibbonResponse'
         type: array
     type: object
   controllers.RefreshTokenRequest:
@@ -671,6 +723,27 @@ definitions:
       user_id:
         type: integer
     type: object
+  models.MbRibbonResponse:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      id:
+        type: integer
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      tracking:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
+    type: object
   models.OrderDetailResponse:
     properties:
       id:
@@ -737,6 +810,48 @@ definitions:
         type: string
       variant:
         type: string
+    type: object
+  models.QcRibbonDetailResponse:
+    properties:
+      box:
+        $ref: '#/definitions/models.BoxResponse'
+      box_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      qc_ribbon_id:
+        type: integer
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.QcRibbonResponse:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/models.QcRibbonDetailResponse'
+        type: array
+      id:
+        type: integer
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      tracking:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
     type: object
   models.Role:
     properties:
@@ -2161,6 +2276,136 @@ paths:
       summary: Get a specific mb-online by ID
       tags:
       - mb-onlines
+  /api/mb-ribbons:
+    get:
+      consumes:
+      - application/json
+      description: Get list of mb-ribbons for current user filtered by current date
+        (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by tracking number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.MbRibbonsListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all mb-ribbons for logged-in user
+      tags:
+      - mb-ribbons
+    post:
+      consumes:
+      - application/json
+      description: Create a new mb-ribbon entry (logged-in users only)
+      parameters:
+      - description: Mb-ribbon data
+        in: body
+        name: mb_ribbon
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateMbRibbonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MbRibbonResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new mb-ribbon
+      tags:
+      - mb-ribbons
+  /api/mb-ribbons/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific mb-ribbon by ID (logged-in users only)
+      parameters:
+      - description: Mb-ribbon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MbRibbonResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a specific mb-ribbon by ID
+      tags:
+      - mb-ribbons
   /api/mobile/orders:
     get:
       consumes:
@@ -3043,6 +3288,137 @@ paths:
       summary: Update product
       tags:
       - products
+  /api/qc-ribbons:
+    get:
+      consumes:
+      - application/json
+      description: Get list of qc-ribbons for current user filtered by current date
+        (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by tracking number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.QcRibbonsListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all qc-ribbons for logged-in user
+      tags:
+      - qc-ribbons
+    post:
+      consumes:
+      - application/json
+      description: Create a new qc-ribbon entry with multiple box details (logged-in
+        users only)
+      parameters:
+      - description: Qc-ribbon data
+        in: body
+        name: qc_ribbon
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateQcRibbonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.QcRibbonResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new qc-ribbon
+      tags:
+      - qc-ribbons
+  /api/qc-ribbons/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific qc-ribbon by ID (logged-in users only)
+      parameters:
+      - description: Qc-ribbon ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.QcRibbonResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a specific qc-ribbon by ID
+      tags:
+      - qc-ribbons
   /api/stores:
     get:
       consumes:

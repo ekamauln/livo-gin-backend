@@ -118,7 +118,8 @@ func (qco *QcOnline) LoadOrder(db *gorm.DB) error {
 	var order Order
 	if err := db.Where("tracking = ?", qco.Tracking).
 		Preload("OrderDetails").
-		Preload("Picker").
+		Preload("Picker.UserRoles.Role").
+		Preload("Picker.UserRoles.Assigner").
 		First(&order).Error; err != nil {
 		return err
 	}

@@ -2215,6 +2215,220 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/mb-ribbons": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of mb-ribbons for current user filtered by current date (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mb-ribbons"
+                ],
+                "summary": "Get all mb-ribbons for logged-in user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by tracking number",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.MbRibbonsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new mb-ribbon entry (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mb-ribbons"
+                ],
+                "summary": "Create new mb-ribbon",
+                "parameters": [
+                    {
+                        "description": "Mb-ribbon data",
+                        "name": "mb_ribbon",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.CreateMbRibbonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.MbRibbonResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mb-ribbons/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific mb-ribbon by ID (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mb-ribbons"
+                ],
+                "summary": "Get a specific mb-ribbon by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mb-ribbon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.MbRibbonResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/mobile/orders": {
             "get": {
                 "security": [
@@ -3650,6 +3864,220 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/qc-ribbons": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of qc-ribbons for current user filtered by current date (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "qc-ribbons"
+                ],
+                "summary": "Get all qc-ribbons for logged-in user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by tracking number",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.QcRibbonsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new qc-ribbon entry with multiple box details (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "qc-ribbons"
+                ],
+                "summary": "Create new qc-ribbon",
+                "parameters": [
+                    {
+                        "description": "Qc-ribbon data",
+                        "name": "qc_ribbon",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.CreateQcRibbonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.QcRibbonResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/qc-ribbons/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific qc-ribbon by ID (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "qc-ribbons"
+                ],
+                "summary": "Get a specific qc-ribbon by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Qc-ribbon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.QcRibbonResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/stores": {
             "get": {
                 "security": [
@@ -4263,6 +4691,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.CreateMbRibbonRequest": {
+            "type": "object",
+            "required": [
+                "tracking"
+            ],
+            "properties": {
+                "tracking": {
+                    "type": "string",
+                    "example": "JNE1234567890"
+                }
+            }
+        },
         "controllers.CreateOrderDetailRequest": {
             "type": "object",
             "required": [
@@ -4365,6 +4805,25 @@ const docTemplate = `{
                 },
                 "variant": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.CreateQcRibbonRequest": {
+            "type": "object",
+            "required": [
+                "details",
+                "tracking"
+            ],
+            "properties": {
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.QcRibbonDetailRequest"
+                    }
+                },
+                "tracking": {
+                    "type": "string",
+                    "example": "250925AASB6BSDJUI3C"
                 }
             }
         },
@@ -4487,6 +4946,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.MbOnlineResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
+                }
+            }
+        },
+        "controllers.MbRibbonsListResponse": {
+            "type": "object",
+            "properties": {
+                "mb_ribbons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MbRibbonResponse"
                     }
                 },
                 "pagination": {
@@ -4703,6 +5176,38 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.ProductResponse"
+                    }
+                }
+            }
+        },
+        "controllers.QcRibbonDetailRequest": {
+            "type": "object",
+            "required": [
+                "box_id",
+                "quantity"
+            ],
+            "properties": {
+                "box_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 5
+                }
+            }
+        },
+        "controllers.QcRibbonsListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
+                },
+                "qc_ribbons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.QcRibbonResponse"
                     }
                 }
             }
@@ -5090,6 +5595,40 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MbRibbonResponse": {
+            "type": "object",
+            "properties": {
+                "complained": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    ]
+                },
+                "tracking": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserResponse"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.OrderDetailResponse": {
             "type": "object",
             "properties": {
@@ -5189,6 +5728,72 @@ const docTemplate = `{
                 },
                 "variant": {
                     "type": "string"
+                }
+            }
+        },
+        "models.QcRibbonDetailResponse": {
+            "type": "object",
+            "properties": {
+                "box": {
+                    "$ref": "#/definitions/models.BoxResponse"
+                },
+                "box_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "qc_ribbon_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.QcRibbonResponse": {
+            "type": "object",
+            "properties": {
+                "complained": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.QcRibbonDetailResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    ]
+                },
+                "tracking": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserResponse"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
