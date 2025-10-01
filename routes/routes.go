@@ -14,7 +14,7 @@ import (
 )
 
 // SetupRoutes configures all routes for the application
-func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController, orderMobileController *controllers.OrderMobileController, boxController *controllers.BoxController, expeditionController *controllers.ExpeditionController, channelController *controllers.ChannelController, storeController *controllers.StoreController) *gin.Engine {
+func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController, orderMobileController *controllers.OrderMobileController, boxController *controllers.BoxController, expeditionController *controllers.ExpeditionController, channelController *controllers.ChannelController, storeController *controllers.StoreController, mbOnlineController *controllers.MbOnlineController) *gin.Engine {
 	// Set Gin mode
 	gin.SetMode(cfg.GinMode)
 
@@ -25,6 +25,14 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization")
 	router.Use(cors.New(corsConfig))
+
+	// Serve static files from static directory
+	router.Static("/static", "./static")
+
+	// Specifically handle favicon requests
+	router.GET("/favicon.ico", func(c *gin.Context) {
+		c.File("./static/favicon.ico")
+	})
 
 	// Swagger documentation (keep original endpoint for compatibility)
 	router.GET("/swagger/*any", func(c *gin.Context) {
@@ -143,6 +151,8 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	SetupBoxRoutes(api, cfg, boxController)
 	SetupExpeditionRoutes(api, cfg, expeditionController)
 	SetupChannelRoutes(api, cfg, channelController)
+	SetupStoreRoutes(api, cfg, storeController)
+	SetupMbOnlineRoutes(api, cfg, mbOnlineController)
 
 	return router
 }

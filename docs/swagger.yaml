@@ -100,6 +100,14 @@ definitions:
     - name
     - slug
     type: object
+  controllers.CreateMbOnlineRequest:
+    properties:
+      tracking:
+        example: JNE1234567890
+        type: string
+    required:
+    - tracking
+    type: object
   controllers.CreateOrderDetailRequest:
     properties:
       product_name:
@@ -254,6 +262,15 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserResponse'
+    type: object
+  controllers.MbOnlinesListResponse:
+    properties:
+      mb_onlines:
+        items:
+          $ref: '#/definitions/models.MbOnlineResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
     type: object
   controllers.MobileOrderDetailResponse:
     properties:
@@ -632,6 +649,27 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  models.MbOnlineResponse:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      id:
+        type: integer
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      tracking:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
     type: object
   models.OrderDetailResponse:
     properties:
@@ -1993,6 +2031,136 @@ paths:
       summary: Update expedition
       tags:
       - expeditions
+  /api/mb-onlines:
+    get:
+      consumes:
+      - application/json
+      description: Get list of mb-onlines for current user filtered by current date
+        (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by tracking number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.MbOnlinesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all mb-onlines for logged-in user
+      tags:
+      - mb-onlines
+    post:
+      consumes:
+      - application/json
+      description: Create a new mb-online entry (logged-in users only)
+      parameters:
+      - description: Mb-online data
+        in: body
+        name: mb_online
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateMbOnlineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MbOnlineResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new mb-online
+      tags:
+      - mb-onlines
+  /api/mb-onlines/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific mb-online by ID (logged-in users only)
+      parameters:
+      - description: Mb-online ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MbOnlineResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a specific mb-online by ID
+      tags:
+      - mb-onlines
   /api/mobile/orders:
     get:
       consumes:
