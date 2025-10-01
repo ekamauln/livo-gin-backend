@@ -118,7 +118,8 @@ func (pco *PcOnline) LoadOrder(db *gorm.DB) error {
 	var order Order
 	if err := db.Where("tracking = ?", pco.Tracking).
 		Preload("OrderDetails").
-		Preload("Picker").
+		Preload("Picker.UserRoles.Role").
+		Preload("Picker.UserRoles.Assigner").
 		First(&order).Error; err != nil {
 		return err
 	}
@@ -133,5 +134,6 @@ func ToPcOnlineResponses(pcOnlines []PcOnline) []PcOnlineResponse {
 	for i, pco := range pcOnlines {
 		responses[i] = pco.ToPcOnlineResponse()
 	}
+
 	return responses
 }

@@ -214,7 +214,7 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 	for _, detail := range req.Details {
 		// Check for duplicate box IDs in request
 		if boxIDs[detail.BoxID] {
-			utils.ErrorResponse(c, http.StatusBadRequest, "Duplicate box ID", "Each box can only be added once per QC ribbon")
+			utils.ErrorResponse(c, http.StatusBadRequest, "Duplicate box ID", "Each box can only be added once per QC online")
 			return
 		}
 		boxIDs[detail.BoxID] = true
