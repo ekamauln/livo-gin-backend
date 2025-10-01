@@ -171,6 +171,19 @@ definitions:
     - order_id
     - store
     type: object
+  controllers.CreatePcOnlineRequest:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/controllers.PcOnlineDetailRequest'
+        type: array
+      tracking:
+        example: TRK123456
+        type: string
+    required:
+    - details
+    - tracking
+    type: object
   controllers.CreateProductRequest:
     properties:
       barcode:
@@ -444,6 +457,28 @@ definitions:
         type: integer
       total:
         type: integer
+    type: object
+  controllers.PcOnlineDetailRequest:
+    properties:
+      box_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 5
+        minimum: 1
+        type: integer
+    required:
+    - box_id
+    - quantity
+    type: object
+  controllers.PcOnlinesListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      pc_onlines:
+        items:
+          $ref: '#/definitions/models.PcOnlineResponse'
+        type: array
     type: object
   controllers.ProductsListResponse:
     properties:
@@ -824,6 +859,48 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  models.PcOnlineDetailResponse:
+    properties:
+      box:
+        $ref: '#/definitions/models.BoxResponse'
+      box_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      pc_online_id:
+        type: integer
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.PcOnlineResponse:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/models.PcOnlineDetailResponse'
+        type: array
+      id:
+        type: integer
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      tracking:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
     type: object
   models.ProductResponse:
     properties:
@@ -3156,6 +3233,136 @@ paths:
       summary: Bulk create orders
       tags:
       - orders
+  /api/pc-onlines:
+    get:
+      consumes:
+      - application/json
+      description: Get list of pc-onlines for current user filtered by current date
+        (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by tracking number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.PcOnlinesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all pc-onlines for logged-in user
+      tags:
+      - pc-onlines
+    post:
+      consumes:
+      - application/json
+      description: Create a new pc-online entry (logged-in users only)
+      parameters:
+      - description: Create pc-online request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreatePcOnlineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PcOnlineResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new pc-online
+      tags:
+      - pc-onlines
+  /api/pc-onlines/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific pc-online by ID (logged-in users only)
+      parameters:
+      - description: Pc-online ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PcOnlineResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a specific pc-online by ID
+      tags:
+      - pc-onlines
   /api/products:
     get:
       consumes:

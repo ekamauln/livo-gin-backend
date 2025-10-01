@@ -56,9 +56,10 @@ func main() {
 	mbRibbonController := controllers.NewMbRibbonController(db)
 	qcRibbonController := controllers.NewQcRibbonController(db)
 	qcOnlineController := controllers.NewQcOnlineController(db)
+	pcOnlineController := controllers.NewPcOnlineController(db)
 
 	// Setup routes
-	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController)
+	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)
