@@ -193,6 +193,19 @@ definitions:
     - sku
     - variant
     type: object
+  controllers.CreateQcOnlineRequest:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/controllers.QcOnlineDetailRequest'
+        type: array
+      tracking:
+        example: TRK123456
+        type: string
+    required:
+    - details
+    - tracking
+    type: object
   controllers.CreateQcRibbonRequest:
     properties:
       details:
@@ -439,6 +452,28 @@ definitions:
       products:
         items:
           $ref: '#/definitions/models.ProductResponse'
+        type: array
+    type: object
+  controllers.QcOnlineDetailRequest:
+    properties:
+      box_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 5
+        minimum: 1
+        type: integer
+    required:
+    - box_id
+    - quantity
+    type: object
+  controllers.QcOnlinesListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      qc_onlines:
+        items:
+          $ref: '#/definitions/models.QcOnlineResponse'
         type: array
     type: object
   controllers.QcRibbonDetailRequest:
@@ -810,6 +845,48 @@ definitions:
         type: string
       variant:
         type: string
+    type: object
+  models.QcOnlineDetailResponse:
+    properties:
+      box:
+        $ref: '#/definitions/models.BoxResponse'
+      box_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      qc_online_id:
+        type: integer
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.QcOnlineResponse:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/models.QcOnlineDetailResponse'
+        type: array
+      id:
+        type: integer
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      tracking:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
     type: object
   models.QcRibbonDetailResponse:
     properties:
@@ -3288,6 +3365,137 @@ paths:
       summary: Update product
       tags:
       - products
+  /api/qc-onlines:
+    get:
+      consumes:
+      - application/json
+      description: Get list of qc-onlines for current user filtered by current date
+        (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by tracking number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.QcOnlinesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all qc-onlines for logged-in user
+      tags:
+      - qc-onlines
+    post:
+      consumes:
+      - application/json
+      description: Create new qc-online entry with multiple box details (logged-in
+        users only)
+      parameters:
+      - description: Create qc-online request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateQcOnlineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.QcOnlineResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new qc-online
+      tags:
+      - qc-onlines
+  /api/qc-onlines/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get  a specific qc-online by ID (logged-in users only)
+      parameters:
+      - description: QcOnline ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.QcOnlineResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a specific qc-online by ID
+      tags:
+      - qc-onlines
   /api/qc-ribbons:
     get:
       consumes:

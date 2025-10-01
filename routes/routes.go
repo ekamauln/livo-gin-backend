@@ -14,7 +14,7 @@ import (
 )
 
 // SetupRoutes configures all routes for the application
-func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController, orderMobileController *controllers.OrderMobileController, boxController *controllers.BoxController, expeditionController *controllers.ExpeditionController, channelController *controllers.ChannelController, storeController *controllers.StoreController, mbOnlineController *controllers.MbOnlineController, mbRibbonController *controllers.MbRibbonController, qcRibbonController *controllers.QcRibbonController) *gin.Engine {
+func SetupRoutes(cfg *config.Config, authController *controllers.AuthController, userController *controllers.UserController, adminController *controllers.AdminController, productController *controllers.ProductController, orderController *controllers.OrderController, orderMobileController *controllers.OrderMobileController, boxController *controllers.BoxController, expeditionController *controllers.ExpeditionController, channelController *controllers.ChannelController, storeController *controllers.StoreController, mbOnlineController *controllers.MbOnlineController, mbRibbonController *controllers.MbRibbonController, qcRibbonController *controllers.QcRibbonController, qcOnlineController *controllers.QcOnlineController) *gin.Engine {
 	// Set Gin mode
 	gin.SetMode(cfg.GinMode)
 
@@ -155,6 +155,7 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	SetupMbOnlineRoutes(api, cfg, mbOnlineController)
 	SetupMbRibbonRoutes(api, cfg, mbRibbonController)
 	SetupQcRibbonRoutes(api, cfg, qcRibbonController)
+	SetupQcOnlineRoutes(api, cfg, qcOnlineController)
 
 	return router
 }
