@@ -74,7 +74,7 @@ func (rfc *RibbonFlowController) GetRibbonFlows(c *gin.Context) {
 
 	response := RibbonFlowsListResponse{
 		RibbonFlows: ribbonFlows,
-		Pagination: RibbonFlowPaginationResponse{
+		Pagination: PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -198,14 +198,8 @@ func (rfc *RibbonFlowController) buildRibbonFlow(tracking string) RibbonFlowResp
 
 // Request/Response structs - REORDERED to match flow
 type RibbonFlowsListResponse struct {
-	RibbonFlows []RibbonFlowResponse         `json:"ribbon_flows"`
-	Pagination  RibbonFlowPaginationResponse `json:"pagination"`
-}
-
-type RibbonFlowPaginationResponse struct {
-	Page  int `json:"page"`
-	Limit int `json:"limit"`
-	Total int `json:"total"`
+	RibbonFlows []RibbonFlowResponse `json:"ribbon_flows"`
+	Pagination  PaginationResponse   `json:"pagination"`
 }
 
 // REORDERED: mb-ribbon -> qc-ribbon -> outbound -> order
