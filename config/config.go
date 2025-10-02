@@ -20,6 +20,8 @@ type Config struct {
 	RefreshTokenExpireDays int
 	Port                   string
 	GinMode                string
+	CORSAllowedOrigins     string
+	CORSAllowedMethods     string
 }
 
 func LoadConfig() *Config {
@@ -43,6 +45,8 @@ func LoadConfig() *Config {
 		RefreshTokenExpireDays: refreshTokenExpireDays,
 		Port:                   getEnv("PORT", "8080"),
 		GinMode:                getEnv("GIN_MODE", "debug"),
+		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000"),
+		CORSAllowedMethods:     getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"),
 	}
 }
 

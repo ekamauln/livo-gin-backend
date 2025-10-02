@@ -25,6 +25,28 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization")
 	router.Use(cors.New(corsConfig))
+	// corsConfig := cors.Config{
+	// 	AllowOrigins: strings.Split(cfg.CORSAllowedOrigins, ","),
+	// 	AllowMethods: strings.Split(cfg.CORSAllowedMethods, ","),
+	// 	AllowHeaders: []string{
+	// 		"Origin",
+	// 		"Content-Length",
+	// 		"Content-Type",
+	// 		"Authorization",
+	// 		"Accept",
+	// 		"X-Requested-With",
+	// 	},
+	// 	ExposeHeaders: []string{
+	// 		"Content-Length",
+	// 		"Content-Type",
+	// 	},
+	// 	AllowCredentials: true,
+	// 	MaxAge:           12 * time.Hour,
+	// }
+	// router.Use(cors.New(corsConfig))
+
+	// Set trusted proxies for security
+	// router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
 	// Serve static files from static directory
 	router.Static("/static", "./static")
