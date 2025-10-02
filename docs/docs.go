@@ -2844,6 +2844,147 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/online-flow/{tracking}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the complete flow tracking of an order through online process (order -\u003e mb-online -\u003e qc-online -\u003e pc-online -\u003e outbound) (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "online-flow"
+                ],
+                "summary": "Get online flow tracking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OnlineFlowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/online-flows": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all online flows with pagination and search (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "online-flow"
+                ],
+                "summary": "Get all online flows",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by tracking number",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OnlineFlowsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/orders": {
             "get": {
                 "security": [
@@ -4800,6 +4941,147 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ribbon-flow/{tracking}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the complete flow tracking of an order through ribbon process (order -\u003e mb-ribbon -\u003e qc-ribbon -\u003e outbound) (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ribbon-flow"
+                ],
+                "summary": "Get ribbon flow tracking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.RibbonFlowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ribbon-flows": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all ribbon flows with pagination and search (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ribbon-flow"
+                ],
+                "summary": "Get all ribbon flows",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by tracking number",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.RibbonFlowsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/stores": {
             "get": {
                 "security": [
@@ -5719,6 +6001,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.MbOnlineFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
+                }
+            }
+        },
         "controllers.MbOnlinesListResponse": {
             "type": "object",
             "properties": {
@@ -5730,6 +6023,17 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/controllers.PaginationResponse"
+                }
+            }
+        },
+        "controllers.MbRibbonFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.UserFlowInfo"
                 }
             }
         },
@@ -5881,6 +6185,88 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.OnlineFlowResponse": {
+            "type": "object",
+            "properties": {
+                "mb_online": {
+                    "$ref": "#/definitions/controllers.MbOnlineFlowInfo"
+                },
+                "order": {
+                    "$ref": "#/definitions/controllers.OnlineOrderFlowInfo"
+                },
+                "outbound": {
+                    "$ref": "#/definitions/controllers.OnlineOutboundFlowInfo"
+                },
+                "pc_online": {
+                    "$ref": "#/definitions/controllers.PcOnlineFlowInfo"
+                },
+                "qc_online": {
+                    "$ref": "#/definitions/controllers.QcOnlineFlowInfo"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.OnlineFlowsListResponse": {
+            "type": "object",
+            "properties": {
+                "online_flows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.OnlineFlowResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
+                }
+            }
+        },
+        "controllers.OnlineOrderFlowInfo": {
+            "type": "object",
+            "properties": {
+                "complained": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "order_ginee_id": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.OnlineOutboundFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expedition": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
+                }
+            }
+        },
+        "controllers.OnlineUserFlowInfo": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.OrderDetailResponse": {
             "type": "object",
             "properties": {
@@ -5918,6 +6304,23 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.OrderFlowInfo": {
+            "type": "object",
+            "properties": {
+                "complained": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "order_ginee_id": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.OrdersListResponse": {
             "type": "object",
             "properties": {
@@ -5929,6 +6332,20 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/controllers.PaginationResponse"
+                }
+            }
+        },
+        "controllers.OutboundFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expedition": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.UserFlowInfo"
                 }
             }
         },
@@ -5978,6 +6395,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.PcOnlineFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
+                }
+            }
+        },
         "controllers.PcOnlinesListResponse": {
             "type": "object",
             "properties": {
@@ -6024,6 +6452,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.QcOnlineFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
+                }
+            }
+        },
         "controllers.QcOnlinesListResponse": {
             "type": "object",
             "properties": {
@@ -6053,6 +6492,17 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1,
                     "example": 5
+                }
+            }
+        },
+        "controllers.QcRibbonFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.UserFlowInfo"
                 }
             }
         },
@@ -6120,6 +6570,40 @@ const docTemplate = `{
                 "role_name": {
                     "type": "string",
                     "example": "manager"
+                }
+            }
+        },
+        "controllers.RibbonFlowResponse": {
+            "type": "object",
+            "properties": {
+                "mb_ribbon": {
+                    "$ref": "#/definitions/controllers.MbRibbonFlowInfo"
+                },
+                "order": {
+                    "$ref": "#/definitions/controllers.OrderFlowInfo"
+                },
+                "outbound": {
+                    "$ref": "#/definitions/controllers.OutboundFlowInfo"
+                },
+                "qc_ribbon": {
+                    "$ref": "#/definitions/controllers.QcRibbonFlowInfo"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.RibbonFlowsListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
+                },
+                "ribbon_flows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.RibbonFlowResponse"
+                    }
                 }
             }
         },
@@ -6354,6 +6838,20 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "controllers.UserFlowInfo": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
