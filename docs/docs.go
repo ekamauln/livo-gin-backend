@@ -2844,81 +2844,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/online-flow/{tracking}": {
+        "/api/online-flow": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get the complete flow tracking of an order through online process (order -\u003e mb-online -\u003e qc-online -\u003e pc-online -\u003e outbound) (logged-in users only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "online-flow"
-                ],
-                "summary": "Get online flow tracking",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tracking number",
-                        "name": "tracking",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controllers.OnlineFlowResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/online-flows": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all online flows with pagination and search (logged-in users only)",
+                "description": "Get all online flows with pagination and search, primary tracking from mb-online (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -2978,6 +2911,73 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/online-flow/{tracking}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the complete flow tracking through online process (mb-online -\u003e qc-online -\u003e pc-online -\u003e order) (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "online-flow"
+                ],
+                "summary": "Get online flow tracking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OnlineFlowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -4941,81 +4941,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ribbon-flow/{tracking}": {
+        "/api/ribbon-flow": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get the complete flow tracking of an order through ribbon process (order -\u003e mb-ribbon -\u003e qc-ribbon -\u003e outbound) (logged-in users only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ribbon-flow"
-                ],
-                "summary": "Get ribbon flow tracking",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tracking number",
-                        "name": "tracking",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controllers.RibbonFlowResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/ribbon-flows": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all ribbon flows with pagination and search (logged-in users only)",
+                "description": "Get all ribbon flows with pagination and search, primary tracking from mb-ribbon (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -5075,6 +5008,73 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ribbon-flow/{tracking}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the complete flow tracking through ribbon process (mb-ribbon -\u003e qc-ribbon -\u003e outbound -\u003e order) (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ribbon-flow"
+                ],
+                "summary": "Get ribbon flow tracking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.RibbonFlowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -6185,6 +6185,20 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.OnlineFlowPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.OnlineFlowResponse": {
             "type": "object",
             "properties": {
@@ -6193,9 +6207,6 @@ const docTemplate = `{
                 },
                 "order": {
                     "$ref": "#/definitions/controllers.OnlineOrderFlowInfo"
-                },
-                "outbound": {
-                    "$ref": "#/definitions/controllers.OnlineOutboundFlowInfo"
                 },
                 "pc_online": {
                     "$ref": "#/definitions/controllers.PcOnlineFlowInfo"
@@ -6218,7 +6229,7 @@ const docTemplate = `{
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/controllers.OnlineFlowPaginationResponse"
                 }
             }
         },
@@ -6236,20 +6247,6 @@ const docTemplate = `{
                 },
                 "tracking": {
                     "type": "string"
-                }
-            }
-        },
-        "controllers.OnlineOutboundFlowInfo": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "expedition": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
                 }
             }
         },
@@ -6573,6 +6570,20 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.RibbonFlowPaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.RibbonFlowResponse": {
             "type": "object",
             "properties": {
@@ -6597,7 +6608,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/controllers.RibbonFlowPaginationResponse"
                 },
                 "ribbon_flows": {
                     "type": "array",

@@ -443,14 +443,21 @@ definitions:
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
     type: object
+  controllers.OnlineFlowPaginationResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
   controllers.OnlineFlowResponse:
     properties:
       mb_online:
         $ref: '#/definitions/controllers.MbOnlineFlowInfo'
       order:
         $ref: '#/definitions/controllers.OnlineOrderFlowInfo'
-      outbound:
-        $ref: '#/definitions/controllers.OnlineOutboundFlowInfo'
       pc_online:
         $ref: '#/definitions/controllers.PcOnlineFlowInfo'
       qc_online:
@@ -465,7 +472,7 @@ definitions:
           $ref: '#/definitions/controllers.OnlineFlowResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/controllers.OnlineFlowPaginationResponse'
     type: object
   controllers.OnlineOrderFlowInfo:
     properties:
@@ -477,15 +484,6 @@ definitions:
         type: string
       tracking:
         type: string
-    type: object
-  controllers.OnlineOutboundFlowInfo:
-    properties:
-      created_at:
-        type: string
-      expedition:
-        type: string
-      user:
-        $ref: '#/definitions/controllers.OnlineUserFlowInfo'
     type: object
   controllers.OnlineUserFlowInfo:
     properties:
@@ -701,6 +699,15 @@ definitions:
     required:
     - role_name
     type: object
+  controllers.RibbonFlowPaginationResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
   controllers.RibbonFlowResponse:
     properties:
       mb_ribbon:
@@ -717,7 +724,7 @@ definitions:
   controllers.RibbonFlowsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/controllers.RibbonFlowPaginationResponse'
       ribbon_flows:
         items:
           $ref: '#/definitions/controllers.RibbonFlowResponse'
@@ -3015,54 +3022,12 @@ paths:
       summary: Get my ongoing picking orders
       tags:
       - mobile-orders
-  /api/online-flow/{tracking}:
+  /api/online-flow:
     get:
       consumes:
       - application/json
-      description: Get the complete flow tracking of an order through online process
-        (order -> mb-online -> qc-online -> pc-online -> outbound) (logged-in users
-        only)
-      parameters:
-      - description: Tracking number
-        in: path
-        name: tracking
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/controllers.OnlineFlowResponse'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get online flow tracking
-      tags:
-      - online-flow
-  /api/online-flows:
-    get:
-      consumes:
-      - application/json
-      description: Get all online flows with pagination and search (logged-in users
-        only)
+      description: Get all online flows with pagination and search, primary tracking
+        from mb-online (logged-in users only)
       parameters:
       - default: 1
         description: Page number
@@ -3101,6 +3066,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all online flows
+      tags:
+      - online-flow
+  /api/online-flow/{tracking}:
+    get:
+      consumes:
+      - application/json
+      description: Get the complete flow tracking through online process (mb-online
+        -> qc-online -> pc-online -> order) (logged-in users only)
+      parameters:
+      - description: Tracking number
+        in: path
+        name: tracking
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OnlineFlowResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get online flow tracking
       tags:
       - online-flow
   /api/orders:
@@ -4302,53 +4308,12 @@ paths:
       summary: Get a specific qc-ribbon by ID
       tags:
       - qc-ribbons
-  /api/ribbon-flow/{tracking}:
+  /api/ribbon-flow:
     get:
       consumes:
       - application/json
-      description: Get the complete flow tracking of an order through ribbon process
-        (order -> mb-ribbon -> qc-ribbon -> outbound) (logged-in users only)
-      parameters:
-      - description: Tracking number
-        in: path
-        name: tracking
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/controllers.RibbonFlowResponse'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get ribbon flow tracking
-      tags:
-      - ribbon-flow
-  /api/ribbon-flows:
-    get:
-      consumes:
-      - application/json
-      description: Get all ribbon flows with pagination and search (logged-in users
-        only)
+      description: Get all ribbon flows with pagination and search, primary tracking
+        from mb-ribbon (logged-in users only)
       parameters:
       - default: 1
         description: Page number
@@ -4387,6 +4352,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all ribbon flows
+      tags:
+      - ribbon-flow
+  /api/ribbon-flow/{tracking}:
+    get:
+      consumes:
+      - application/json
+      description: Get the complete flow tracking through ribbon process (mb-ribbon
+        -> qc-ribbon -> outbound -> order) (logged-in users only)
+      parameters:
+      - description: Tracking number
+        in: path
+        name: tracking
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.RibbonFlowResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get ribbon flow tracking
       tags:
       - ribbon-flow
   /api/stores:

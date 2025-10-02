@@ -21,7 +21,7 @@ func NewOnlineFlowController(db *gorm.DB) *OnlineFlowController {
 
 // GetOnlineFlows godoc
 // @Summary Get all online flows
-// @Description Get all online flows with pagination and search (logged-in users only)
+// @Description Get all online flows with pagination and search, primary tracking from mb-online (logged-in users only)
 // @Tags online-flow
 // @Accept json
 // @Produce json
@@ -32,7 +32,7 @@ func NewOnlineFlowController(db *gorm.DB) *OnlineFlowController {
 // @Success 200 {object} utils.Response{data=OnlineFlowsListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
-// @Router /api/online-flows [get]
+// @Router /api/online-flow [get]
 func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -42,60 +42,27 @@ func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 	// Parse search parameter (optional)
 	search := c.Query("search")
 
-	// Get all unique tracking numbers from online flow tables
 	var trackingNumbers []string
 	var total int64
 
-	// Build query to get all tracking numbers
-	query := ofc.DB.Raw(`
-        SELECT DISTINCT tracking FROM (
-            SELECT tracking FROM orders WHERE tracking IS NOT NULL AND tracking != ''
-            UNION
-            SELECT tracking FROM mb_onlines WHERE tracking IS NOT NULL AND tracking != ''
-            UNION
-            SELECT tracking FROM qc_onlines WHERE tracking IS NOT NULL AND tracking != ''
-            UNION
-            SELECT tracking FROM pc_onlines WHERE tracking IS NOT NULL AND tracking != ''
-            UNION
-            SELECT tracking FROM outbounds WHERE tracking IS NOT NULL AND tracking != ''
-        ) AS all_trackings
-    `)
+	// CHANGED: Get tracking numbers primarily from mb_onlines
+	query := ofc.DB.Model(&models.MbOnline{}).Select("DISTINCT tracking").Where("tracking IS NOT NULL AND tracking != ''")
 
 	// Add search filter if provided
 	if search != "" {
-		query = ofc.DB.Raw(`
-            SELECT DISTINCT tracking FROM (
-                SELECT tracking FROM orders WHERE tracking IS NOT NULL AND tracking != '' AND tracking ILIKE ?
-                UNION
-                SELECT tracking FROM mb_onlines WHERE tracking IS NOT NULL AND tracking != '' AND tracking ILIKE ?
-                UNION
-                SELECT tracking FROM qc_onlines WHERE tracking IS NOT NULL AND tracking != '' AND tracking ILIKE ?
-                UNION
-                SELECT tracking FROM pc_onlines WHERE tracking IS NOT NULL AND tracking != '' AND tracking ILIKE ?
-                UNION
-                SELECT tracking FROM outbounds WHERE tracking IS NOT NULL AND tracking != '' AND tracking ILIKE ?
-            ) AS all_trackings
-            ORDER BY tracking
-        `, "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
-	} else {
-		query = query.Order("tracking")
+		query = query.Where("tracking ILIKE ?", "%"+search+"%")
 	}
 
 	// Get total count
-	var allTrackings []string
-	if err := query.Scan(&allTrackings).Error; err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve tracking numbers", err.Error())
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count tracking numbers", err.Error())
 		return
 	}
-	total = int64(len(allTrackings))
 
-	// Apply pagination
-	if offset < len(allTrackings) {
-		end := offset + limit
-		if end > len(allTrackings) {
-			end = len(allTrackings)
-		}
-		trackingNumbers = allTrackings[offset:end]
+	// Get paginated tracking numbers
+	if err := query.Order("tracking").Limit(limit).Offset(offset).Pluck("tracking", &trackingNumbers).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve tracking numbers", err.Error())
+		return
 	}
 
 	// Build online flows for each tracking
@@ -107,7 +74,7 @@ func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 
 	response := OnlineFlowsListResponse{
 		OnlineFlows: onlineFlows,
-		Pagination: PaginationResponse{
+		Pagination: OnlineFlowPaginationResponse{ // FIXED: Use unique pagination
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -125,7 +92,7 @@ func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 
 // GetOnlineFlow godoc
 // @Summary Get online flow tracking
-// @Description Get the complete flow tracking of an order through online process (order -> mb-online -> qc-online -> pc-online -> outbound) (logged-in users only)
+// @Description Get the complete flow tracking through online process (mb-online -> qc-online -> pc-online -> order) (logged-in users only)
 // @Tags online-flow
 // @Accept json
 // @Produce json
@@ -146,9 +113,9 @@ func (ofc *OnlineFlowController) GetOnlineFlow(c *gin.Context) {
 
 	flow := ofc.buildOnlineFlow(tracking)
 
-	// Check if any data was found
-	if flow.Order == nil && flow.MbOnline == nil && flow.QcOnline == nil && flow.PcOnline == nil && flow.Outbound == nil {
-		utils.ErrorResponse(c, http.StatusNotFound, "Tracking not found", "No records found for the specified tracking number")
+	// CHANGED: Check if mb-online exists (since it's the primary source)
+	if flow.MbOnline == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Tracking not found", "No mb-online record found for the specified tracking number")
 		return
 	}
 
@@ -160,18 +127,7 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 	var response OnlineFlowResponse
 	response.Tracking = tracking
 
-	// 1. Query Order
-	var order models.Order
-	if err := ofc.DB.Where("tracking = ?", tracking).First(&order).Error; err == nil {
-		response.Order = &OnlineOrderFlowInfo{
-			Tracking:     order.Tracking,
-			OrderGineeID: order.OrderGineeID,
-			Complained:   order.Complained,
-			CreatedAt:    order.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		}
-	}
-
-	// 2. Query MB Online
+	// 1. Query MB Online (PRIMARY SOURCE)
 	var mbOnline models.MbOnline
 	if err := ofc.DB.Preload("User").Where("tracking = ?", tracking).First(&mbOnline).Error; err == nil {
 		var user *OnlineUserFlowInfo
@@ -189,7 +145,7 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 		}
 	}
 
-	// 3. Query QC Online
+	// 2. Query QC Online
 	var qcOnline models.QcOnline
 	if err := ofc.DB.Preload("User").Where("tracking = ?", tracking).First(&qcOnline).Error; err == nil {
 		var user *OnlineUserFlowInfo
@@ -207,7 +163,7 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 		}
 	}
 
-	// 4. Query PC Online
+	// 3. Query PC Online
 	var pcOnline models.PcOnline
 	if err := ofc.DB.Preload("User").Where("tracking = ?", tracking).First(&pcOnline).Error; err == nil {
 		var user *OnlineUserFlowInfo
@@ -225,48 +181,40 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 		}
 	}
 
-	// 5. Query Outbound
-	var outbound models.Outbound
-	if err := ofc.DB.Preload("User").Where("tracking = ?", tracking).First(&outbound).Error; err == nil {
-		var user *OnlineUserFlowInfo
-		if outbound.User != nil {
-			user = &OnlineUserFlowInfo{
-				ID:       outbound.User.ID,
-				Username: outbound.User.Username,
-				FullName: outbound.User.FullName,
-			}
-		}
-
-		response.Outbound = &OnlineOutboundFlowInfo{
-			User:       user,
-			Expedition: outbound.Expedition,
-			CreatedAt:  outbound.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	// 4. Query Order (LAST)
+	var order models.Order
+	if err := ofc.DB.Where("tracking = ?", tracking).First(&order).Error; err == nil {
+		response.Order = &OnlineOrderFlowInfo{
+			Tracking:     order.Tracking,
+			OrderGineeID: order.OrderGineeID,
+			Complained:   order.Complained,
+			CreatedAt:    order.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
 	}
 
 	return response
 }
 
-// Request/Response structs
+// Request/Response structs - REORDERED to match flow
 type OnlineFlowsListResponse struct {
-	OnlineFlows []OnlineFlowResponse `json:"online_flows"`
-	Pagination  PaginationResponse   `json:"pagination"`
+	OnlineFlows []OnlineFlowResponse         `json:"online_flows"`
+	Pagination  OnlineFlowPaginationResponse `json:"pagination"`
 }
 
+// FIXED: Use unique pagination response name
+type OnlineFlowPaginationResponse struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+	Total int `json:"total"`
+}
+
+// REORDERED: mb-online -> qc-online -> pc-online -> order
 type OnlineFlowResponse struct {
-	Tracking string                  `json:"tracking"`
-	Order    *OnlineOrderFlowInfo    `json:"order,omitempty"`
-	MbOnline *MbOnlineFlowInfo       `json:"mb_online,omitempty"`
-	QcOnline *QcOnlineFlowInfo       `json:"qc_online,omitempty"`
-	PcOnline *PcOnlineFlowInfo       `json:"pc_online,omitempty"`
-	Outbound *OnlineOutboundFlowInfo `json:"outbound,omitempty"`
-}
-
-type OnlineOrderFlowInfo struct {
-	Tracking     string `json:"tracking"`
-	OrderGineeID string `json:"order_ginee_id"`
-	Complained   bool   `json:"complained"`
-	CreatedAt    string `json:"created_at"`
+	Tracking string               `json:"tracking"`
+	MbOnline *MbOnlineFlowInfo    `json:"mb_online,omitempty"`
+	QcOnline *QcOnlineFlowInfo    `json:"qc_online,omitempty"`
+	PcOnline *PcOnlineFlowInfo    `json:"pc_online,omitempty"`
+	Order    *OnlineOrderFlowInfo `json:"order,omitempty"`
 }
 
 type MbOnlineFlowInfo struct {
@@ -284,10 +232,11 @@ type PcOnlineFlowInfo struct {
 	CreatedAt string              `json:"created_at"`
 }
 
-type OnlineOutboundFlowInfo struct {
-	User       *OnlineUserFlowInfo `json:"user,omitempty"`
-	Expedition string              `json:"expedition"`
-	CreatedAt  string              `json:"created_at"`
+type OnlineOrderFlowInfo struct {
+	Tracking     string `json:"tracking"`
+	OrderGineeID string `json:"order_ginee_id"`
+	Complained   bool   `json:"complained"`
+	CreatedAt    string `json:"created_at"`
 }
 
 type OnlineUserFlowInfo struct {

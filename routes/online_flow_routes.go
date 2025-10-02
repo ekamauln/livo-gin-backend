@@ -11,7 +11,7 @@ import (
 // SetupOnlineFlowRoutes configures online flow-related routes
 func SetupOnlineFlowRoutes(r *gin.RouterGroup, cfg *config.Config, onlineFlowController *controllers.OnlineFlowController) {
 	// Online flow routes (authenticated)
-	onlineFlow := r.Group("/online_flows")
+	onlineFlow := r.Group("/online-flow")
 	onlineFlow.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public online flow routes

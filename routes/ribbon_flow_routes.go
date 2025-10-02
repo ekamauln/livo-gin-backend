@@ -11,7 +11,7 @@ import (
 // SetupRibbonFlowRoutes configures ribbon flow-related routes
 func SetupRibbonFlowRoutes(r *gin.RouterGroup, cfg *config.Config, ribbonFlowController *controllers.RibbonFlowController) {
 	// Ribbon flow routes (authenticated)
-	ribbonFlow := r.Group("/ribbon_flows")
+	ribbonFlow := r.Group("/ribbon-flow")
 	ribbonFlow.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public ribbon flow routes
