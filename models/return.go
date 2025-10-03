@@ -74,6 +74,20 @@ type ReturnResponse struct {
 	Store   *StoreResponse   `json:"store,omitempty"`
 }
 
+// ReturnMobileResponse is a simplified response for mobile use
+type ReturnMobileResponse struct {
+	ID        uint      `json:"id"`
+	Tracking  string    `json:"tracking"`
+	ChannelID uint      `json:"channel_id"`
+	StoreID   uint      `json:"store_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	// Related data
+	Channel *ChannelResponse `json:"channel,omitempty"`
+	Store   *StoreResponse   `json:"store,omitempty"`
+}
+
 // ToReturnResponse converts Return model to ReturnResponse
 func (r *Return) ToReturnResponse() ReturnResponse {
 	// Convert return details to response format
@@ -139,4 +153,30 @@ func ToReturnResponses(returns []Return) []ReturnResponse {
 		responses[i] = ret.ToReturnResponse()
 	}
 	return responses
+}
+
+// ToReturnMobileResponse converts Return model to ReturnMobileResponse
+func (r *Return) ToReturnMobileResponse() ReturnMobileResponse {
+	response := ReturnMobileResponse{
+		ID:        r.ID,
+		Tracking:  r.NewTracking,
+		ChannelID: r.ChannelID,
+		StoreID:   r.StoreID,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+	}
+
+	// Include channel data if loaded
+	if r.Channel != nil {
+		channelResponse := r.Channel.ToChannelResponse()
+		response.Channel = &channelResponse
+	}
+
+	// Include store data if loaded
+	if r.Store != nil {
+		storeResponse := r.Store.ToStoreResponse()
+		response.Store = &storeResponse
+	}
+
+	return response
 }

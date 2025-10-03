@@ -64,6 +64,19 @@ definitions:
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
     type: object
+  controllers.CreateBaseReturnRequest:
+    properties:
+      channel_id:
+        type: integer
+      new_tracking:
+        type: string
+      store_id:
+        type: integer
+    required:
+    - channel_id
+    - new_tracking
+    - store_id
+    type: object
   controllers.CreateBoxRequest:
     properties:
       code:
@@ -243,6 +256,19 @@ definitions:
         type: string
     required:
     - details
+    - tracking
+    type: object
+  controllers.CreateReturnMobileRequest:
+    properties:
+      channel_id:
+        type: integer
+      store_id:
+        type: integer
+      tracking:
+        type: string
+    required:
+    - channel_id
+    - store_id
     - tracking
     type: object
   controllers.CreateStoreRequest:
@@ -443,15 +469,6 @@ definitions:
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
     type: object
-  controllers.OnlineFlowPaginationResponse:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
   controllers.OnlineFlowResponse:
     properties:
       mb_online:
@@ -472,7 +489,7 @@ definitions:
           $ref: '#/definitions/controllers.OnlineFlowResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.OnlineFlowPaginationResponse'
+        $ref: '#/definitions/controllers.PaginationResponse'
     type: object
   controllers.OnlineOrderFlowInfo:
     properties:
@@ -699,14 +716,23 @@ definitions:
     required:
     - role_name
     type: object
-  controllers.RibbonFlowPaginationResponse:
+  controllers.ReturnMobilesListResponse:
     properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      return_mobiles:
+        items:
+          $ref: '#/definitions/models.ReturnMobileResponse'
+        type: array
+    type: object
+  controllers.ReturnsListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      returns:
+        items:
+          $ref: '#/definitions/models.ReturnResponse'
+        type: array
     type: object
   controllers.RibbonFlowResponse:
     properties:
@@ -724,7 +750,7 @@ definitions:
   controllers.RibbonFlowsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.RibbonFlowPaginationResponse'
+        $ref: '#/definitions/controllers.PaginationResponse'
       ribbon_flows:
         items:
           $ref: '#/definitions/controllers.RibbonFlowResponse'
@@ -747,6 +773,25 @@ definitions:
         items:
           $ref: '#/definitions/models.StoreResponse'
         type: array
+    type: object
+  controllers.UpdateAdminReturnRequest:
+    properties:
+      old_tracking:
+        type: string
+      return_number:
+        type: string
+      return_reason:
+        type: string
+      return_type:
+        type: string
+      scrap_number:
+        type: string
+    required:
+    - old_tracking
+    - return_number
+    - return_reason
+    - return_type
+    - scrap_number
     type: object
   controllers.UpdateBoxRequest:
     properties:
@@ -775,6 +820,19 @@ definitions:
         type: boolean
     required:
     - complained
+    type: object
+  controllers.UpdateDataReturnRequest:
+    properties:
+      old_tracking:
+        type: string
+      return_reason:
+        type: string
+      return_type:
+        type: string
+    required:
+    - old_tracking
+    - return_reason
+    - return_type
     type: object
   controllers.UpdateExpeditionRequest:
     properties:
@@ -1214,6 +1272,81 @@ definitions:
         $ref: '#/definitions/models.UserResponse'
       user_id:
         type: integer
+    type: object
+  models.ReturnDetailResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      product:
+        $ref: '#/definitions/models.ProductResponse'
+      product_id:
+        type: integer
+      quantity:
+        type: integer
+      return_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.ReturnMobileResponse:
+    properties:
+      channel:
+        allOf:
+        - $ref: '#/definitions/models.ChannelResponse'
+        description: Related data
+      channel_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      store:
+        $ref: '#/definitions/models.StoreResponse'
+      store_id:
+        type: integer
+      tracking:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ReturnResponse:
+    properties:
+      channel:
+        $ref: '#/definitions/models.ChannelResponse'
+      channel_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      new_tracking:
+        type: string
+      old_tracking:
+        type: string
+      order:
+        allOf:
+        - $ref: '#/definitions/models.OrderResponse'
+        description: Related data
+      return_details:
+        items:
+          $ref: '#/definitions/models.ReturnDetailResponse'
+        type: array
+      return_number:
+        type: string
+      return_reason:
+        type: string
+      return_type:
+        type: string
+      scrap_number:
+        type: string
+      store:
+        $ref: '#/definitions/models.StoreResponse'
+      store_id:
+        type: integer
+      updated_at:
+        type: string
     type: object
   models.Role:
     properties:
@@ -4308,6 +4441,358 @@ paths:
       summary: Get a specific qc-ribbon by ID
       tags:
       - qc-ribbons
+  /api/return-mobiles:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all return mobiles (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by return mobile tracking (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ReturnMobilesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all return mobiles
+      tags:
+      - return-mobiles
+    post:
+      consumes:
+      - application/json
+      description: Create a new return mobile (logged-in users only)
+      parameters:
+      - description: Create return mobile request
+        in: body
+        name: return_mobile
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateReturnMobileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnMobileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new return mobile
+      tags:
+      - return-mobiles
+  /api/return-mobiles/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a return mobile by ID (logged-in users only)
+      parameters:
+      - description: Return Mobile ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnMobileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a return mobile by ID
+      tags:
+      - return-mobiles
+  /api/returns:
+    get:
+      description: Get a list of all returns (logged in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      - description: Search by return new tracking (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ReturnsListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all returns
+      tags:
+      - returns
+    post:
+      consumes:
+      - application/json
+      description: Create a new base return (logged in users only)
+      parameters:
+      - description: Create Base Return Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateBaseReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new base return
+      tags:
+      - returns
+  /api/returns/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get return details by ID (logged in users only)
+      parameters:
+      - description: Return ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get return by ID
+      tags:
+      - returns
+  /api/returns/{id}/admin:
+    put:
+      consumes:
+      - application/json
+      description: Update return admin (logged in users only)
+      parameters:
+      - description: Return ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Admin Return Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateAdminReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update return admin data
+      tags:
+      - returns
+  /api/returns/{id}/data:
+    put:
+      consumes:
+      - application/json
+      description: Update return data (logged in users only)
+      parameters:
+      - description: Return ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Data Return Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateDataReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update return data
+      tags:
+      - returns
   /api/ribbon-flow:
     get:
       consumes:
