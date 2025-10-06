@@ -189,6 +189,13 @@ func (moc *MbOnlineController) CreateMbOnline(c *gin.Context) {
 		return
 	}
 
+	// Check if tracking already exists in mb-ribbon table
+	var existingMbRibbon models.MbRibbon
+	if err := moc.DB.Where("tracking = ?", req.Tracking).First(&existingMbRibbon).Error; err == nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Tracking already processed in MB-Ribbon", "This tracking number is already being processed in the ribbon workflow")
+		return
+	}
+
 	// Check for duplicate tracking
 	var existingMbOnline models.MbOnline
 	if err := moc.DB.Where("tracking = ?", req.Tracking).First(&existingMbOnline).Error; err == nil {
