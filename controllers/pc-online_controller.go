@@ -67,7 +67,7 @@ func (pc *PcOnlineController) GetPcOnlines(c *gin.Context) {
 	if err := query.Order("id DESC").
 		Preload("Details.Box").
 		Preload("User.UserRoles.Role").
-		Preload("Order.OrderDetails").
+		Preload("User.UserRoles.Assigner").
 		Limit(limit).Offset(offset).Find(&pcOnlines).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve pc-onlines", err.Error())
 		return
