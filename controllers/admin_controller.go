@@ -57,7 +57,10 @@ func (ac *AdminController) GetUsers(c *gin.Context) {
 	}
 
 	// Get total count
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count users", err.Error())
+		return
+	}
 
 	// Get users with pagination and order by ID ascending
 	if err := query.Order("id ASC").Preload("UserRoles.Role").Preload("UserRoles.Assigner").Limit(limit).Offset(offset).Find(&users).Error; err != nil {

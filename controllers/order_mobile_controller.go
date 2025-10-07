@@ -59,7 +59,10 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 	}
 
 	// Get total count
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count orders", err.Error())
+		return
+	}
 
 	// Get orders with pagination, sorted by ID ascending
 	if err := query.Order("id ASC").

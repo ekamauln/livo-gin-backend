@@ -61,7 +61,10 @@ func (moc *MbOnlineController) GetMbOnlines(c *gin.Context) {
 	}
 
 	// Get total count with filters
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count mb-onlines", err.Error())
+		return
+	}
 
 	// Get mbOnlines with pagination, search filter, and order by ID descending
 	if err := query.Order("id DESC").Preload("User.UserRoles.Role").Preload("User.UserRoles.Assigner").Limit(limit).Offset(offset).Find(&mbOnlines).Error; err != nil {

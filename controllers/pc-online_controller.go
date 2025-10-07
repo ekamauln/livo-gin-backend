@@ -61,7 +61,10 @@ func (pc *PcOnlineController) GetPcOnlines(c *gin.Context) {
 	}
 
 	// Get total count with filters
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count pc-onlines", err.Error())
+		return
+	}
 
 	// Get pc-onlines with pagination, filters, and preload relationships
 	if err := query.Order("id DESC").

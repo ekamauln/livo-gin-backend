@@ -54,7 +54,10 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 	}
 
 	// Get total count with search filter
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count return", err.Error())
+		return
+	}
 
 	// Get return mobiles with pagination, search filter, and order by ID descending
 	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&returnMobiles).Error; err != nil {

@@ -53,7 +53,10 @@ func (rc *ReturnController) GetReturns(c *gin.Context) {
 	}
 
 	// Get total count with search filter
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count returns", err.Error())
+		return
+	}
 
 	// Get returns with pagination, search filter, and order by ID desc
 	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&rets).Error; err != nil {

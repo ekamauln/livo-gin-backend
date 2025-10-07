@@ -61,7 +61,10 @@ func (mrc *MbRibbonController) GetMbRibbons(c *gin.Context) {
 	}
 
 	// Get total count with filters
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count mb-ribbons", err.Error())
+		return
+	}
 
 	// Get mbRibbons with pagination, search filter, and order by ID descending
 	if err := query.Order("id DESC").Preload("User.UserRoles.Role").Preload("User.UserRoles.Assigner").Limit(limit).Offset(offset).Find(&mbRibbons).Error; err != nil {

@@ -54,7 +54,10 @@ func (ec *ExpeditionController) GetExpeditions(c *gin.Context) {
 	}
 
 	// Get total count with search filter
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count expeditions", err.Error())
+		return
+	}
 
 	// Get expeditions with pagination, search filter, and order by ID ascending
 	if err := query.Order("id ASC").Limit(limit).Offset(offset).Find(&expeditions).Error; err != nil {

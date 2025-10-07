@@ -34,6 +34,13 @@ func NewOutboundController(db *gorm.DB) *OutboundController {
 // @Failure 403 {object} utils.Response
 // @Router /api/outbounds [get]
 func (oc *OutboundController) GetOutbounds(c *gin.Context) {
+	// Get user ID from JWT token
+	userID, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", "User not authenticated")
+		return
+	}
+
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
@@ -45,8 +52,10 @@ func (oc *OutboundController) GetOutbounds(c *gin.Context) {
 	var outbounds []models.Outbound
 	var total int64
 
-	// Build query with optional search
-	query := oc.DB.Model(&models.Outbound{})
+	// Build query with user_id and current date filters
+	query := oc.DB.Model(&models.Outbound{}).
+		Where("user_id = ?", userID).
+		Where("DATE(created_at) = CURRENT_DATE")
 
 	if search != "" {
 		// Search by outbound tracking with partial match
@@ -54,7 +63,10 @@ func (oc *OutboundController) GetOutbounds(c *gin.Context) {
 	}
 
 	// Get total count with search filter
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count outbounds", err.Error())
+		return
+	}
 
 	// Get outbounds with pagination, search filter, and order by ID descending
 	if err := query.
@@ -191,6 +203,18 @@ func (oc *OutboundController) UpdateOutbound(c *gin.Context) {
 	if err := oc.DB.Save(&outbound).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update outbound", err.Error())
 		return
+	}
+
+	// Load order data after update
+	if outbound.Tracking != "" {
+		var order models.Order
+		if err := oc.DB.Where("tracking = ?", outbound.Tracking).
+			Preload("OrderDetails").
+			Preload("Picker.UserRoles.Role").
+			Preload("Picker.UserRoles.Assigner").
+			First(&order).Error; err == nil {
+			outbound.Order = &order
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Outbound updated successfully", outbound.ToOutboundResponse())

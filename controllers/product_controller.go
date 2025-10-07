@@ -54,7 +54,10 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 	}
 
 	// Get total count with search filter
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count products", err.Error())
+		return
+	}
 
 	// Get products with pagination, search filter, and order by ID ascending
 	if err := query.Order("id ASC").Limit(limit).Offset(offset).Find(&products).Error; err != nil {

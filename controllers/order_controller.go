@@ -150,7 +150,10 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	}
 
 	// Get total count with all filters
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count orders", err.Error())
+		return
+	}
 
 	// Get orders with pagination, filters, sorted by ID ascending
 	if err := query.Order("id ASC").Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {

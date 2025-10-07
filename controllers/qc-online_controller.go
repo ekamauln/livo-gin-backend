@@ -61,7 +61,10 @@ func (qoc *QcOnlineController) GetQcOnlines(c *gin.Context) {
 	}
 
 	// Get total count with filters
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count qc-onlines", err.Error())
+		return
+	}
 
 	// Get qc-onlines with pagination, filters, and preload relationships
 	if err := query.Order("id DESC").
