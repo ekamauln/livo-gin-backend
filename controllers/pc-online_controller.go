@@ -262,14 +262,7 @@ func (pc *PcOnlineController) CreatePcOnline(c *gin.Context) {
 		}
 	}()
 
-	// Clear all QC Online details for this tracking
-	if err := tx.Where("qc_online_id = ?", qcOnline.ID).Delete(&models.QcOnlineDetail{}).Error; err != nil {
-		tx.Rollback()
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear QC online details", err.Error())
-		return
-	}
-
-	// Create PC Online
+	// Create PC Online first
 	pcOnline := models.PcOnline{
 		Tracking: req.Tracking,
 		UserID:   &userIDUint,
@@ -281,7 +274,7 @@ func (pc *PcOnlineController) CreatePcOnline(c *gin.Context) {
 		return
 	}
 
-	// Create PC Online Detail for each box
+	// Create PC Online Details from request
 	for _, detail := range req.Details {
 		pcOnlineDetail := models.PcOnlineDetail{
 			PcOnlineID: pcOnline.ID,
@@ -292,6 +285,28 @@ func (pc *PcOnlineController) CreatePcOnline(c *gin.Context) {
 		if err := tx.Create(&pcOnlineDetail).Error; err != nil {
 			tx.Rollback()
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create pc-online detail", err.Error())
+			return
+		}
+	}
+
+	// FIXED: Delete QC Online details for this tracking
+	if err := tx.Where("qc_online_id = ?", qcOnline.ID).Delete(&models.QcOnlineDetail{}).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear QC online details", err.Error())
+		return
+	}
+
+	// ADDED: Replace QC Online details with PC Online details data
+	for _, detail := range req.Details {
+		newQcOnlineDetail := models.QcOnlineDetail{
+			QcOnlineID: qcOnline.ID,
+			BoxID:      detail.BoxID,
+			Quantity:   detail.Quantity,
+		}
+
+		if err := tx.Create(&newQcOnlineDetail).Error; err != nil {
+			tx.Rollback()
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create new QC online detail", err.Error())
 			return
 		}
 	}
