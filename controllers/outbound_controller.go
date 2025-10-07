@@ -57,9 +57,29 @@ func (oc *OutboundController) GetOutbounds(c *gin.Context) {
 	query.Count(&total)
 
 	// Get outbounds with pagination, search filter, and order by ID descending
-	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&outbounds).Error; err != nil {
+	if err := query.
+		Preload("User.UserRoles.Role").
+		Preload("User.UserRoles.Assigner").
+		Order("id DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&outbounds).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve outbounds", err.Error())
 		return
+	}
+
+	// Manually load order data for each outbound
+	for i := range outbounds {
+		if outbounds[i].Tracking != "" {
+			var order models.Order
+			if err := oc.DB.Where("tracking = ?", outbounds[i].Tracking).
+				Preload("OrderDetails").
+				Preload("Picker.UserRoles.Role").
+				Preload("Picker.UserRoles.Assigner").
+				First(&order).Error; err == nil {
+				outbounds[i].Order = &order
+			}
+		}
 	}
 
 	// Convert to response format
@@ -103,9 +123,23 @@ func (oc *OutboundController) GetOutbound(c *gin.Context) {
 	outboundID := c.Param("id")
 
 	var outbound models.Outbound
-	if err := oc.DB.First(&outbound, outboundID).Error; err != nil {
+	if err := oc.DB.Preload("User.UserRoles.Role").
+		Preload("User.UserRoles.Assigner").
+		First(&outbound, outboundID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Outbound not found", err.Error())
 		return
+	}
+
+	// Manually load order data
+	if outbound.Tracking != "" {
+		var order models.Order
+		if err := oc.DB.Where("tracking = ?", outbound.Tracking).
+			Preload("OrderDetails").
+			Preload("Picker.UserRoles.Role").
+			Preload("Picker.UserRoles.Assigner").
+			First(&order).Error; err == nil {
+			outbound.Order = &order
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Outbound retrieved successfully", outbound.ToOutboundResponse())
@@ -136,7 +170,9 @@ func (oc *OutboundController) UpdateOutbound(c *gin.Context) {
 	}
 
 	var outbound models.Outbound
-	if err := oc.DB.First(&outbound, outboundID).Error; err != nil {
+	if err := oc.DB.Preload("User.UserRoles.Role").
+		Preload("User.UserRoles.Assigner").
+		First(&outbound, outboundID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Outbound not found", err.Error())
 		return
 	}
@@ -192,6 +228,30 @@ func (oc *OutboundController) CreateOutbound(c *gin.Context) {
 	userIDUint, ok := userID.(uint)
 	if !ok {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Invalid user ID", "Failed to convert user ID")
+		return
+	}
+
+	// Check if tracking exists in orders table first
+	var order models.Order
+	if err := oc.DB.Where("tracking = ?", req.Tracking).First(&order).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to check order", err.Error())
+		return
+	}
+
+	// Check if tracking exists in QC-Ribbon OR QC-Online (Quality Control process)
+	var qcRibbon models.QcRibbon
+	var qcOnline models.QcOnline
+
+	qcRibbonExists := oc.DB.Where("tracking = ?", req.Tracking).First(&qcRibbon).Error == nil
+	qcOnlineExists := oc.DB.Where("tracking = ?", req.Tracking).First(&qcOnline).Error == nil
+
+	// Tracking must exist in either QC-Ribbon OR QC-Online
+	if !qcRibbonExists && !qcOnlineExists {
+		utils.ErrorResponse(c, http.StatusBadRequest, "QC process required", "Tracking must go through Quality Control (QC-Ribbon or QC-Online) before outbound")
 		return
 	}
 
