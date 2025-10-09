@@ -130,9 +130,9 @@ func (rfc *RibbonFlowController) buildRibbonFlow(tracking string) RibbonFlowResp
 	// 1. Query MB Ribbon (PRIMARY SOURCE)
 	var mbRibbon models.MbRibbon
 	if err := rfc.DB.Preload("User").Where("tracking = ?", tracking).First(&mbRibbon).Error; err == nil {
-		var user *UserFlowInfo
+		var user *RibbonUserFlowInfo
 		if mbRibbon.User != nil {
-			user = &UserFlowInfo{
+			user = &RibbonUserFlowInfo{
 				ID:       mbRibbon.User.ID,
 				Username: mbRibbon.User.Username,
 				FullName: mbRibbon.User.FullName,
@@ -148,9 +148,9 @@ func (rfc *RibbonFlowController) buildRibbonFlow(tracking string) RibbonFlowResp
 	// 2. Query QC Ribbon
 	var qcRibbon models.QcRibbon
 	if err := rfc.DB.Preload("User").Where("tracking = ?", tracking).First(&qcRibbon).Error; err == nil {
-		var user *UserFlowInfo
+		var user *RibbonUserFlowInfo
 		if qcRibbon.User != nil {
-			user = &UserFlowInfo{
+			user = &RibbonUserFlowInfo{
 				ID:       qcRibbon.User.ID,
 				Username: qcRibbon.User.Username,
 				FullName: qcRibbon.User.FullName,
@@ -166,26 +166,27 @@ func (rfc *RibbonFlowController) buildRibbonFlow(tracking string) RibbonFlowResp
 	// 3. Query Outbound
 	var outbound models.Outbound
 	if err := rfc.DB.Preload("User").Where("tracking = ?", tracking).First(&outbound).Error; err == nil {
-		var user *UserFlowInfo
+		var user *RibbonUserFlowInfo
 		if outbound.User != nil {
-			user = &UserFlowInfo{
+			user = &RibbonUserFlowInfo{
 				ID:       outbound.User.ID,
 				Username: outbound.User.Username,
 				FullName: outbound.User.FullName,
 			}
 		}
 
-		response.Outbound = &OutboundFlowInfo{
-			User:       user,
-			Expedition: outbound.Expedition,
-			CreatedAt:  outbound.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		response.Outbound = &RibbonOutboundFlowInfo{
+			User:            user,
+			Expedition:      outbound.Expedition,
+			ExpeditionColor: outbound.ExpeditionColor, // ADDED
+			CreatedAt:       outbound.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
 	}
 
 	// 4. Query Order (LAST)
 	var order models.Order
 	if err := rfc.DB.Where("tracking = ?", tracking).First(&order).Error; err == nil {
-		response.Order = &OrderFlowInfo{
+		response.Order = &RibbonOrderFlowInfo{
 			Tracking:     order.Tracking,
 			OrderGineeID: order.OrderGineeID,
 			Complained:   order.Complained,
@@ -204,37 +205,38 @@ type RibbonFlowsListResponse struct {
 
 // REORDERED: mb-ribbon -> qc-ribbon -> outbound -> order
 type RibbonFlowResponse struct {
-	Tracking string            `json:"tracking"`
-	MbRibbon *MbRibbonFlowInfo `json:"mb_ribbon,omitempty"`
-	QcRibbon *QcRibbonFlowInfo `json:"qc_ribbon,omitempty"`
-	Outbound *OutboundFlowInfo `json:"outbound,omitempty"`
-	Order    *OrderFlowInfo    `json:"order,omitempty"`
+	Tracking string                  `json:"tracking"`
+	MbRibbon *MbRibbonFlowInfo       `json:"mb_ribbon,omitempty"`
+	QcRibbon *QcRibbonFlowInfo       `json:"qc_ribbon,omitempty"`
+	Outbound *RibbonOutboundFlowInfo `json:"outbound,omitempty"`
+	Order    *RibbonOrderFlowInfo    `json:"order,omitempty"`
 }
 
 type MbRibbonFlowInfo struct {
-	User      *UserFlowInfo `json:"user,omitempty"`
-	CreatedAt string        `json:"created_at"`
+	User      *RibbonUserFlowInfo `json:"user,omitempty"`
+	CreatedAt string              `json:"created_at"`
 }
 
 type QcRibbonFlowInfo struct {
-	User      *UserFlowInfo `json:"user,omitempty"`
-	CreatedAt string        `json:"created_at"`
+	User      *RibbonUserFlowInfo `json:"user,omitempty"`
+	CreatedAt string              `json:"created_at"`
 }
 
-type OutboundFlowInfo struct {
-	User       *UserFlowInfo `json:"user,omitempty"`
-	Expedition string        `json:"expedition"`
-	CreatedAt  string        `json:"created_at"`
+type RibbonOutboundFlowInfo struct {
+	User            *RibbonUserFlowInfo `json:"user,omitempty"`
+	Expedition      string              `json:"expedition"`
+	ExpeditionColor string              `json:"expedition_color"` // ADDED
+	CreatedAt       string              `json:"created_at"`
 }
 
-type OrderFlowInfo struct {
+type RibbonOrderFlowInfo struct {
 	Tracking     string `json:"tracking"`
 	OrderGineeID string `json:"order_ginee_id"`
 	Complained   bool   `json:"complained"`
 	CreatedAt    string `json:"created_at"`
 }
 
-type UserFlowInfo struct {
+type RibbonUserFlowInfo struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
 	FullName string `json:"full_name"`

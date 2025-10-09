@@ -45,7 +45,7 @@ func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 	var trackingNumbers []string
 	var total int64
 
-	// CHANGED: Get tracking numbers primarily from mb_onlines
+	// Get tracking numbers primarily from mb_onlines
 	query := ofc.DB.Model(&models.MbOnline{}).Select("DISTINCT tracking").Where("tracking IS NOT NULL AND tracking != ''")
 
 	// Add search filter if provided
@@ -181,7 +181,27 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 		}
 	}
 
-	// 4. Query Order (LAST)
+	// 4. Query Outbound
+	var outbound models.Outbound
+	if err := ofc.DB.Preload("User").Where("tracking = ?", tracking).First(&outbound).Error; err == nil {
+		var user *OnlineUserFlowInfo
+		if outbound.User != nil {
+			user = &OnlineUserFlowInfo{
+				ID:       outbound.User.ID,
+				Username: outbound.User.Username,
+				FullName: outbound.User.FullName,
+			}
+		}
+
+		response.Outbound = &OnlineOutboundFlowInfo{
+			User:            user,
+			Expedition:      outbound.Expedition,
+			ExpeditionColor: outbound.ExpeditionColor,
+			CreatedAt:       outbound.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		}
+	}
+
+	// 5. Query Order (LAST)
 	var order models.Order
 	if err := ofc.DB.Where("tracking = ?", tracking).First(&order).Error; err == nil {
 		response.Order = &OnlineOrderFlowInfo{
@@ -203,11 +223,12 @@ type OnlineFlowsListResponse struct {
 
 // REORDERED: mb-online -> qc-online -> pc-online -> order
 type OnlineFlowResponse struct {
-	Tracking string               `json:"tracking"`
-	MbOnline *MbOnlineFlowInfo    `json:"mb_online,omitempty"`
-	QcOnline *QcOnlineFlowInfo    `json:"qc_online,omitempty"`
-	PcOnline *PcOnlineFlowInfo    `json:"pc_online,omitempty"`
-	Order    *OnlineOrderFlowInfo `json:"order,omitempty"`
+	Tracking string                  `json:"tracking"`
+	MbOnline *MbOnlineFlowInfo       `json:"mb_online,omitempty"`
+	QcOnline *QcOnlineFlowInfo       `json:"qc_online,omitempty"`
+	PcOnline *PcOnlineFlowInfo       `json:"pc_online,omitempty"`
+	Outbound *OnlineOutboundFlowInfo `json:"outbound,omitempty"`
+	Order    *OnlineOrderFlowInfo    `json:"order,omitempty"`
 }
 
 type MbOnlineFlowInfo struct {
@@ -223,6 +244,13 @@ type QcOnlineFlowInfo struct {
 type PcOnlineFlowInfo struct {
 	User      *OnlineUserFlowInfo `json:"user,omitempty"`
 	CreatedAt string              `json:"created_at"`
+}
+
+type OnlineOutboundFlowInfo struct {
+	User            *OnlineUserFlowInfo `json:"user,omitempty"`
+	Expedition      string              `json:"expedition"`
+	ExpeditionColor string              `json:"expedition_color"`
+	CreatedAt       string              `json:"created_at"`
 }
 
 type OnlineOrderFlowInfo struct {

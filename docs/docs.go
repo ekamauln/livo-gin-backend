@@ -6654,7 +6654,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/controllers.UserFlowInfo"
+                    "$ref": "#/definitions/controllers.RibbonUserFlowInfo"
                 }
             }
         },
@@ -6815,6 +6815,9 @@ const docTemplate = `{
                 "order": {
                     "$ref": "#/definitions/controllers.OnlineOrderFlowInfo"
                 },
+                "outbound": {
+                    "$ref": "#/definitions/controllers.OnlineOutboundFlowInfo"
+                },
                 "pc_online": {
                     "$ref": "#/definitions/controllers.PcOnlineFlowInfo"
                 },
@@ -6854,6 +6857,23 @@ const docTemplate = `{
                 },
                 "tracking": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.OnlineOutboundFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expedition": {
+                    "type": "string"
+                },
+                "expedition_color": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
                 }
             }
         },
@@ -6908,23 +6928,6 @@ const docTemplate = `{
                 }
             }
         },
-        "controllers.OrderFlowInfo": {
-            "type": "object",
-            "properties": {
-                "complained": {
-                    "type": "boolean"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "order_ginee_id": {
-                    "type": "string"
-                },
-                "tracking": {
-                    "type": "string"
-                }
-            }
-        },
         "controllers.OrdersListResponse": {
             "type": "object",
             "properties": {
@@ -6936,20 +6939,6 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/controllers.PaginationResponse"
-                }
-            }
-        },
-        "controllers.OutboundFlowInfo": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "expedition": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/controllers.UserFlowInfo"
                 }
             }
         },
@@ -7106,7 +7095,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/controllers.UserFlowInfo"
+                    "$ref": "#/definitions/controllers.RibbonUserFlowInfo"
                 }
             }
         },
@@ -7212,10 +7201,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/controllers.MbRibbonFlowInfo"
                 },
                 "order": {
-                    "$ref": "#/definitions/controllers.OrderFlowInfo"
+                    "$ref": "#/definitions/controllers.RibbonOrderFlowInfo"
                 },
                 "outbound": {
-                    "$ref": "#/definitions/controllers.OutboundFlowInfo"
+                    "$ref": "#/definitions/controllers.RibbonOutboundFlowInfo"
                 },
                 "qc_ribbon": {
                     "$ref": "#/definitions/controllers.QcRibbonFlowInfo"
@@ -7236,6 +7225,55 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/controllers.RibbonFlowResponse"
                     }
+                }
+            }
+        },
+        "controllers.RibbonOrderFlowInfo": {
+            "type": "object",
+            "properties": {
+                "complained": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "order_ginee_id": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.RibbonOutboundFlowInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expedition": {
+                    "type": "string"
+                },
+                "expedition_color": {
+                    "description": "ADDED",
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/controllers.RibbonUserFlowInfo"
+                }
+            }
+        },
+        "controllers.RibbonUserFlowInfo": {
+            "type": "object",
+            "properties": {
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -7516,20 +7554,6 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "controllers.UserFlowInfo": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },

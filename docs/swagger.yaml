@@ -370,7 +370,7 @@ definitions:
       created_at:
         type: string
       user:
-        $ref: '#/definitions/controllers.UserFlowInfo'
+        $ref: '#/definitions/controllers.RibbonUserFlowInfo'
     type: object
   controllers.MbRibbonsListResponse:
     properties:
@@ -475,6 +475,8 @@ definitions:
         $ref: '#/definitions/controllers.MbOnlineFlowInfo'
       order:
         $ref: '#/definitions/controllers.OnlineOrderFlowInfo'
+      outbound:
+        $ref: '#/definitions/controllers.OnlineOutboundFlowInfo'
       pc_online:
         $ref: '#/definitions/controllers.PcOnlineFlowInfo'
       qc_online:
@@ -501,6 +503,17 @@ definitions:
         type: string
       tracking:
         type: string
+    type: object
+  controllers.OnlineOutboundFlowInfo:
+    properties:
+      created_at:
+        type: string
+      expedition:
+        type: string
+      expedition_color:
+        type: string
+      user:
+        $ref: '#/definitions/controllers.OnlineUserFlowInfo'
     type: object
   controllers.OnlineUserFlowInfo:
     properties:
@@ -535,17 +548,6 @@ definitions:
       tracking:
         type: string
     type: object
-  controllers.OrderFlowInfo:
-    properties:
-      complained:
-        type: boolean
-      created_at:
-        type: string
-      order_ginee_id:
-        type: string
-      tracking:
-        type: string
-    type: object
   controllers.OrdersListResponse:
     properties:
       orders:
@@ -554,15 +556,6 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/controllers.PaginationResponse'
-    type: object
-  controllers.OutboundFlowInfo:
-    properties:
-      created_at:
-        type: string
-      expedition:
-        type: string
-      user:
-        $ref: '#/definitions/controllers.UserFlowInfo'
     type: object
   controllers.OutboundsListResponse:
     properties:
@@ -667,7 +660,7 @@ definitions:
       created_at:
         type: string
       user:
-        $ref: '#/definitions/controllers.UserFlowInfo'
+        $ref: '#/definitions/controllers.RibbonUserFlowInfo'
     type: object
   controllers.QcRibbonsListResponse:
     properties:
@@ -739,9 +732,9 @@ definitions:
       mb_ribbon:
         $ref: '#/definitions/controllers.MbRibbonFlowInfo'
       order:
-        $ref: '#/definitions/controllers.OrderFlowInfo'
+        $ref: '#/definitions/controllers.RibbonOrderFlowInfo'
       outbound:
-        $ref: '#/definitions/controllers.OutboundFlowInfo'
+        $ref: '#/definitions/controllers.RibbonOutboundFlowInfo'
       qc_ribbon:
         $ref: '#/definitions/controllers.QcRibbonFlowInfo'
       tracking:
@@ -755,6 +748,38 @@ definitions:
         items:
           $ref: '#/definitions/controllers.RibbonFlowResponse'
         type: array
+    type: object
+  controllers.RibbonOrderFlowInfo:
+    properties:
+      complained:
+        type: boolean
+      created_at:
+        type: string
+      order_ginee_id:
+        type: string
+      tracking:
+        type: string
+    type: object
+  controllers.RibbonOutboundFlowInfo:
+    properties:
+      created_at:
+        type: string
+      expedition:
+        type: string
+      expedition_color:
+        description: ADDED
+        type: string
+      user:
+        $ref: '#/definitions/controllers.RibbonUserFlowInfo'
+    type: object
+  controllers.RibbonUserFlowInfo:
+    properties:
+      full_name:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
     type: object
   controllers.SkippedOrder:
     properties:
@@ -948,15 +973,6 @@ definitions:
       is_active:
         example: true
         type: boolean
-    type: object
-  controllers.UserFlowInfo:
-    properties:
-      full_name:
-        type: string
-      id:
-        type: integer
-      username:
-        type: string
     type: object
   controllers.UsersListResponse:
     properties:
