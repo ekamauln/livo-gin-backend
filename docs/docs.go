@@ -2879,6 +2879,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Start date (YYYY-MM-DD format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Search by tracking number",
                         "name": "search",
                         "in": "query"
@@ -2901,6 +2913,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "401": {
@@ -5559,6 +5577,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Start date (YYYY-MM-DD or YYYY-M-D format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD or YYYY-M-D format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Search by tracking number",
                         "name": "search",
                         "in": "query"
@@ -5581,6 +5611,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "401": {
@@ -7255,7 +7291,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "expedition_color": {
-                    "description": "ADDED",
                     "type": "string"
                 },
                 "user": {

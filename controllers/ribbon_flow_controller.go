@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"livo-gin-backend/models"
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,8 +31,11 @@ func NewRibbonFlowController(db *gorm.DB) *RibbonFlowController {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param start_date query string false "Start date (YYYY-MM-DD or YYYY-M-D format)"
+// @Param end_date query string false "End date (YYYY-MM-DD or YYYY-M-D format)"
 // @Param search query string false "Search by tracking number"
 // @Success 200 {object} utils.Response{data=RibbonFlowsListResponse}
+// @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Router /api/ribbon-flow [get]
@@ -39,14 +45,42 @@ func (rfc *RibbonFlowController) GetRibbonFlows(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
+	// ADDED: Parse date range parameters
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
 	// Parse search parameter (optional)
 	search := c.Query("search")
 
 	var trackingNumbers []string
 	var total int64
 
-	// CHANGED: Get tracking numbers primarily from mb_ribbons
+	// Get tracking numbers primarily from mb_ribbons
 	query := rfc.DB.Model(&models.MbRibbon{}).Select("DISTINCT tracking").Where("tracking IS NOT NULL AND tracking != ''")
+
+	// Apply date range filters if provided
+	if startDate != "" {
+		// Parse start date and set time to beginning of day
+		if parsedStartDate, err := time.Parse("2006-01-02", startDate); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid start_date format", "start_date must be in YYYY-MM-DD format")
+			return
+		} else {
+			startOfDay := parsedStartDate.Format("2006-01-02 00:00:00")
+			query = query.Where("created_at >= ?", startOfDay)
+		}
+	}
+
+	if endDate != "" {
+		// Parse end date and set time to end of day
+		if parsedEndDate, err := time.Parse("2006-01-02", endDate); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid end_date format", "end_date must be in YYYY-MM-DD format")
+			return
+		} else {
+			// Add 24 hours to get the start of next day, then use < instead of <=
+			nextDay := parsedEndDate.AddDate(0, 0, 1).Format("2006-01-02 00:00:00")
+			query = query.Where("created_at < ?", nextDay)
+		}
+	}
 
 	// Add search filter if provided
 	if search != "" {
@@ -81,10 +115,27 @@ func (rfc *RibbonFlowController) GetRibbonFlows(c *gin.Context) {
 		},
 	}
 
-	// Build success message
+	// Build success message with date filters
 	message := "Ribbon flows retrieved successfully"
+	var filters []string
+
+	if startDate != "" || endDate != "" {
+		var dateRange []string
+		if startDate != "" {
+			dateRange = append(dateRange, "from: "+startDate)
+		}
+		if endDate != "" {
+			dateRange = append(dateRange, "to: "+endDate)
+		}
+		filters = append(filters, "date: "+strings.Join(dateRange, ", "))
+	}
+
 	if search != "" {
-		message += " (filtered by tracking: " + search + ")"
+		filters = append(filters, "search: "+search)
+	}
+
+	if len(filters) > 0 {
+		message += fmt.Sprintf(" (filtered by %s)", strings.Join(filters, " | "))
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, message, response)
@@ -203,6 +254,13 @@ type RibbonFlowsListResponse struct {
 	Pagination  PaginationResponse   `json:"pagination"`
 }
 
+// FIXED: Use unique pagination response to avoid conflicts
+type RibbonFlowPaginationResponse struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+	Total int `json:"total"`
+}
+
 // REORDERED: mb-ribbon -> qc-ribbon -> outbound -> order
 type RibbonFlowResponse struct {
 	Tracking string                  `json:"tracking"`
@@ -225,7 +283,7 @@ type QcRibbonFlowInfo struct {
 type RibbonOutboundFlowInfo struct {
 	User            *RibbonUserFlowInfo `json:"user,omitempty"`
 	Expedition      string              `json:"expedition"`
-	ExpeditionColor string              `json:"expedition_color"` // ADDED
+	ExpeditionColor string              `json:"expedition_color"`
 	CreatedAt       string              `json:"created_at"`
 }
 

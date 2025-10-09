@@ -767,7 +767,6 @@ definitions:
       expedition:
         type: string
       expedition_color:
-        description: ADDED
         type: string
       user:
         $ref: '#/definitions/controllers.RibbonUserFlowInfo'
@@ -3188,6 +3187,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
       - description: Search by tracking number
         in: query
         name: search
@@ -3204,6 +3211,10 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.OnlineFlowsListResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
         "401":
           description: Unauthorized
           schema:
@@ -4826,6 +4837,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Start date (YYYY-MM-DD or YYYY-M-D format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD or YYYY-M-D format)
+        in: query
+        name: end_date
+        type: string
       - description: Search by tracking number
         in: query
         name: search
@@ -4842,6 +4861,10 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.RibbonFlowsListResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
         "401":
           description: Unauthorized
           schema:
