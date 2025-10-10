@@ -62,9 +62,10 @@ func main() {
 	ribbonFlowController := controllers.NewRibbonFlowController(db)
 	returnController := controllers.NewReturnController(db)
 	returnMobileController := controllers.NewReturnMobileController(db)
+	complainController := controllers.NewComplainController(db)
 
 	// Setup routes
-	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController, outboundController, onlineFlowController, ribbonFlowController, returnController, returnMobileController)
+	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController, outboundController, onlineFlowController, ribbonFlowController, returnController, returnMobileController, complainController)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

@@ -23,6 +23,7 @@ func NewReturnController(db *gorm.DB) *ReturnController {
 // @Summary Get all returns
 // @Description Get a list of all returns (logged in users only)
 // @Tags returns
+// @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
@@ -105,7 +106,7 @@ func (rc *ReturnController) GetReturn(c *gin.Context) {
 	returnID := c.Param("id")
 
 	var ret models.Return
-	if err := rc.DB.Preload("ReturnDetails.Product"). // ADDED: Preload return details
+	if err := rc.DB.Preload("ReturnDetails.Product"). // Preload return details
 								Preload("Channel").
 								Preload("Store").
 								First(&ret, returnID).Error; err != nil {
