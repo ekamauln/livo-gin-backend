@@ -32,7 +32,7 @@ func NewReturnMobileController(db *gorm.DB) *ReturnMobileController {
 // @Success 200 {object} utils.Response{data=ReturnMobilesListResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
-// @Router /api/return-mobiles [get]
+// @Router /api/mobile/returns [get]
 func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -102,7 +102,7 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Failure 404 {object} utils.Response
-// @Router /api/return-mobiles/{id} [get]
+// @Router /api/mobile/returns/{id} [get]
 func (rmc *ReturnMobileController) GetReturnMobile(c *gin.Context) {
 	returnMobileID := c.Param("id")
 
@@ -127,7 +127,7 @@ func (rmc *ReturnMobileController) GetReturnMobile(c *gin.Context) {
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
-// @Router /api/return-mobiles [post]
+// @Router /api/mobile/returns [post]
 func (rmc *ReturnMobileController) CreateReturnMobile(c *gin.Context) {
 	var req CreateReturnMobileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

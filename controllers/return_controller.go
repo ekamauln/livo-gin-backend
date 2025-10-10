@@ -105,8 +105,23 @@ func (rc *ReturnController) GetReturn(c *gin.Context) {
 	returnID := c.Param("id")
 
 	var ret models.Return
-	if err := rc.DB.Preload("Order").Preload("Channel").Preload("Store").First(&ret, returnID).Error; err != nil {
+	if err := rc.DB.Preload("ReturnDetails.Product"). // ADDED: Preload return details
+								Preload("Channel").
+								Preload("Store").
+								First(&ret, returnID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Return not found", err.Error())
+		return
+	}
+
+	// Load order data if old_tracking exists
+	if ret.OldTracking != "" {
+		var order models.Order
+		if err := rc.DB.Preload("OrderDetails").
+			Preload("Picker.UserRoles.Role").
+			Preload("Picker.UserRoles.Assigner").
+			Where("tracking = ?", ret.OldTracking).First(&order).Error; err == nil {
+			ret.Order = &order
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Return retrieved successfully", ret.ToReturnResponse())
@@ -156,7 +171,7 @@ func (rc *ReturnController) CreateBaseReturn(c *gin.Context) {
 
 // UpdateDataReturn godoc
 // @Summary Update return data
-// @Description Update return data (logged in users only)
+// @Description Update return data and sync product details from order (logged in users only)
 // @Tags returns
 // @Accept json
 // @Produce json
@@ -185,20 +200,84 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 	}
 
 	// Check for duplicate old tracking if changed
-	var existingReturn models.Return
-	if err := rc.DB.Where("old_tracking = ?", req.OldTracking, returnID).First(&existingReturn).Error; err == nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
-		return
+	if ret.OldTracking != req.OldTracking {
+		var existingReturn models.Return
+		if err := rc.DB.Where("old_tracking = ? AND id != ?", req.OldTracking, returnID).First(&existingReturn).Error; err == nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
+			return
+		}
 	}
+
+	// Start database transaction
+	tx := rc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	// Update return data fields
 	ret.OldTracking = req.OldTracking
 	ret.ReturnType = req.ReturnType
 	ret.ReturnReason = req.ReturnReason
 
-	if err := rc.DB.Save(&ret).Error; err != nil {
+	if err := tx.Save(&ret).Error; err != nil {
+		tx.Rollback()
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
 		return
+	}
+
+	// Find order by old_tracking and sync product details
+	var order models.Order
+	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
+		// Clear existing return details
+		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+			tx.Rollback()
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+			return
+		}
+
+		// Create return details based on order details
+		for _, orderDetail := range order.OrderDetails {
+			// Find product by SKU
+			var product models.Product
+			if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
+				returnDetail := models.ReturnDetail{
+					ReturnID:  ret.ID,
+					ProductID: product.ID,
+					Quantity:  orderDetail.Quantity,
+				}
+
+				if err := tx.Create(&returnDetail).Error; err != nil {
+					tx.Rollback()
+					utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
+					return
+				}
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to commit transaction", err.Error())
+		return
+	}
+
+	// Load updated return with relationships
+	rc.DB.Preload("ReturnDetails.Product").
+		Preload("Channel").
+		Preload("Store").
+		First(&ret, ret.ID)
+
+	// Load order data if old_tracking matches
+	if ret.OldTracking != "" {
+		var order models.Order
+		if err := rc.DB.Preload("OrderDetails").
+			Preload("Picker.UserRoles.Role").
+			Preload("Picker.UserRoles.Assigner").
+			Where("tracking = ?", ret.OldTracking).First(&order).Error; err == nil {
+			ret.Order = &order
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Return updated successfully", ret.ToReturnResponse())
@@ -206,7 +285,7 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 
 // UpdateAdminReturn godoc
 // @Summary Update return admin data
-// @Description Update return admin (logged in users only)
+// @Description Update return admin data and sync product details from order (logged in users only)
 // @Tags returns
 // @Accept json
 // @Produce json
@@ -235,11 +314,21 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 	}
 
 	// Check for duplicate old tracking if changed
-	var existingReturn models.Return
-	if err := rc.DB.Where("old_tracking = ?", req.OldTracking, returnID).First(&existingReturn).Error; err == nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
-		return
+	if ret.OldTracking != req.OldTracking {
+		var existingReturn models.Return
+		if err := rc.DB.Where("old_tracking = ? AND id != ?", req.OldTracking, returnID).First(&existingReturn).Error; err == nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
+			return
+		}
 	}
+
+	// Start database transaction
+	tx := rc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	// Update return admin fields
 	ret.OldTracking = req.OldTracking
@@ -248,9 +337,63 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 	ret.ReturnNumber = req.ReturnNumber
 	ret.ScrapNumber = req.ScrapNumber
 
-	if err := rc.DB.Save(&ret).Error; err != nil {
+	if err := tx.Save(&ret).Error; err != nil {
+		tx.Rollback()
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
 		return
+	}
+
+	// Find order by old_tracking and sync product details
+	var order models.Order
+	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
+		// Clear existing return details
+		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+			tx.Rollback()
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+			return
+		}
+
+		// Create return details based on order details
+		for _, orderDetail := range order.OrderDetails {
+			// Find product by SKU
+			var product models.Product
+			if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
+				returnDetail := models.ReturnDetail{
+					ReturnID:  ret.ID,
+					ProductID: product.ID,
+					Quantity:  orderDetail.Quantity,
+				}
+
+				if err := tx.Create(&returnDetail).Error; err != nil {
+					tx.Rollback()
+					utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
+					return
+				}
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to commit transaction", err.Error())
+		return
+	}
+
+	// Load updated return with relationships
+	rc.DB.Preload("ReturnDetails.Product").
+		Preload("Channel").
+		Preload("Store").
+		First(&ret, ret.ID)
+
+	// Load order data if old_tracking matches
+	if ret.OldTracking != "" {
+		var order models.Order
+		if err := rc.DB.Preload("OrderDetails").
+			Preload("Picker.UserRoles.Role").
+			Preload("Picker.UserRoles.Assigner").
+			Where("tracking = ?", ret.OldTracking).First(&order).Error; err == nil {
+			ret.Order = &order
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Return updated successfully", ret.ToReturnResponse())

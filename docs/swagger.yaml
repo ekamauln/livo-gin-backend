@@ -3170,6 +3170,135 @@ paths:
       summary: Get my ongoing picking orders
       tags:
       - mobile-orders
+  /api/mobile/returns:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all return mobiles (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by return mobile tracking (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ReturnMobilesListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all return mobiles
+      tags:
+      - return-mobiles
+    post:
+      consumes:
+      - application/json
+      description: Create a new return mobile (logged-in users only)
+      parameters:
+      - description: Create return mobile request
+        in: body
+        name: return_mobile
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateReturnMobileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnMobileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new return mobile
+      tags:
+      - return-mobiles
+  /api/mobile/returns/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a return mobile by ID (logged-in users only)
+      parameters:
+      - description: Return Mobile ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ReturnMobileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a return mobile by ID
+      tags:
+      - return-mobiles
   /api/online-flow:
     get:
       consumes:
@@ -4468,135 +4597,6 @@ paths:
       summary: Get a specific qc-ribbon by ID
       tags:
       - qc-ribbons
-  /api/return-mobiles:
-    get:
-      consumes:
-      - application/json
-      description: Get list of all return mobiles (logged-in users only)
-      parameters:
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      - description: Search by return mobile tracking (partial match)
-        in: query
-        name: search
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/controllers.ReturnMobilesListResponse'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get all return mobiles
-      tags:
-      - return-mobiles
-    post:
-      consumes:
-      - application/json
-      description: Create a new return mobile (logged-in users only)
-      parameters:
-      - description: Create return mobile request
-        in: body
-        name: return_mobile
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.CreateReturnMobileRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/models.ReturnMobileResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Create a new return mobile
-      tags:
-      - return-mobiles
-  /api/return-mobiles/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get a return mobile by ID (logged-in users only)
-      parameters:
-      - description: Return Mobile ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/models.ReturnMobileResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
-      summary: Get a return mobile by ID
-      tags:
-      - return-mobiles
   /api/returns:
     get:
       description: Get a list of all returns (logged in users only)
@@ -4724,7 +4724,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update return admin (logged in users only)
+      description: Update return admin data and sync product details from order (logged
+        in users only)
       parameters:
       - description: Return ID
         in: path
@@ -4774,7 +4775,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update return data (logged in users only)
+      description: Update return data and sync product details from order (logged
+        in users only)
       parameters:
       - description: Return ID
         in: path
