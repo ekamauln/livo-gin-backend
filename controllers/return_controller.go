@@ -61,9 +61,24 @@ func (rc *ReturnController) GetReturns(c *gin.Context) {
 	}
 
 	// Get returns with pagination, search filter, and order by ID desc
-	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&rets).Error; err != nil {
+	if err := query.Preload("ReturnDetails.Product").
+		Preload("Channel").
+		Preload("Store").Order("id DESC").Limit(limit).Offset(offset).Find(&rets).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve returns", err.Error())
 		return
+	}
+
+	// Load order data for each return
+	for i := range rets {
+		if rets[i].OldTracking != "" {
+			var order models.Order
+			if err := rc.DB.Preload("OrderDetails").
+				Preload("Picker.UserRoles.Role").
+				Preload("Picker.UserRoles.Assigner").
+				Where("tracking = ?", rets[i].OldTracking).First(&order).Error; err == nil {
+				rets[i].Order = &order
+			}
+		}
 	}
 
 	// Convert to response format
@@ -107,10 +122,10 @@ func (rc *ReturnController) GetReturn(c *gin.Context) {
 	returnID := c.Param("id")
 
 	var ret models.Return
-	if err := rc.DB.Preload("ReturnDetails.Product"). // Preload return details
-								Preload("Channel").
-								Preload("Store").
-								First(&ret, returnID).Error; err != nil {
+	if err := rc.DB.Preload("ReturnDetails.Product").
+		Preload("Channel").
+		Preload("Store").
+		First(&ret, returnID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Return not found", err.Error())
 		return
 	}
