@@ -5,6 +5,7 @@ import (
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -212,6 +213,9 @@ func (sc *StoreController) CreateStore(c *gin.Context) {
 		utils.ValidationErrorResponse(c, err)
 		return
 	}
+
+	// convert code to uppercase and trim spaces
+	req.Code = strings.ToUpper(strings.TrimSpace(req.Code))
 
 	store := models.Store{
 		Code: req.Code,

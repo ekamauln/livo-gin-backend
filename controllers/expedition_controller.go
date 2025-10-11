@@ -5,6 +5,7 @@ import (
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -214,6 +215,12 @@ func (ec *ExpeditionController) CreateExpedition(c *gin.Context) {
 		utils.ValidationErrorResponse(c, err)
 		return
 	}
+
+	// Convert code to uppercase and trim spaces
+	req.Code = strings.ToUpper(strings.TrimSpace(req.Code))
+
+	// Convert slug to lowercase and trim spaces
+	req.Slug = strings.ToLower(strings.TrimSpace(req.Slug))
 
 	expedition := models.Expedition{
 		Code:  req.Code,

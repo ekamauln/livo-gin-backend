@@ -5,6 +5,7 @@ import (
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -134,6 +135,9 @@ func (rmc *ReturnMobileController) CreateReturnMobile(c *gin.Context) {
 		utils.ValidationErrorResponse(c, err)
 		return
 	}
+
+	// Convert tracking to uppercase and trim spaces
+	req.Tracking = strings.ToUpper(strings.TrimSpace(req.Tracking))
 
 	returnMobile := models.Return{
 		NewTracking: req.Tracking,

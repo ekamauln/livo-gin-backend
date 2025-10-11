@@ -5,6 +5,7 @@ import (
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -173,6 +174,9 @@ func (moc *MbOnlineController) CreateMbOnline(c *gin.Context) {
 		utils.ValidationErrorResponse(c, err)
 		return
 	}
+
+	// Convert tracking to uppercase
+	req.Tracking = strings.ToUpper(strings.TrimSpace(req.Tracking))
 
 	// Convert userID to uint
 	userIDUint, ok := userID.(uint)
