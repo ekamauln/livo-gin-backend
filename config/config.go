@@ -36,16 +36,16 @@ func LoadConfig() *Config {
 	return &Config{
 		DBHost:                 getEnv("DB_HOST", "localhost"),
 		DBPort:                 getEnv("DB_PORT", "5432"),
-		DBUser:                 getEnv("DB_USER", "nuxx"),
+		DBUser:                 getEnv("DB_USER", "Nuxx"),
 		DBPassword:             getEnv("DB_PASSWORD", "gajahku"),
 		DBName:                 getEnv("DB_NAME", "livo-master"),
 		DBSSLMode:              getEnv("DB_SSLMODE", "disable"),
 		JWTSecret:              getEnv("JWT_SECRET", "your-secret-key"),
 		JWTExpireHours:         jwtExpireHours,
 		RefreshTokenExpireDays: refreshTokenExpireDays,
-		Port:                   getEnv("PORT", "8080"),
+		Port:                   getEnv("SERVER_PORT", "8080"), // Changed from "PORT" to "SERVER_PORT"
 		GinMode:                getEnv("GIN_MODE", "debug"),
-		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000"),
+		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8081"),
 		CORSAllowedMethods:     getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"),
 	}
 }
