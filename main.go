@@ -11,7 +11,7 @@
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host 192.168.31.136:8000
+// @host 192.168.31.136:8081
 // @BasePath /
 
 // @securityDefinitions.apikey BearerAuth

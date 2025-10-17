@@ -43,9 +43,9 @@ func LoadConfig() *Config {
 		JWTSecret:              getEnv("JWT_SECRET", "your-secret-key"),
 		JWTExpireHours:         jwtExpireHours,
 		RefreshTokenExpireDays: refreshTokenExpireDays,
-		Port:                   getEnv("SERVER_PORT", "8080"), // Changed from "PORT" to "SERVER_PORT"
+		Port:                   getEnv("SERVER_PORT", "8081"),
 		GinMode:                getEnv("GIN_MODE", "debug"),
-		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8081"),
+		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "*"),
 		CORSAllowedMethods:     getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"),
 	}
 }
