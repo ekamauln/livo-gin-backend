@@ -10,6 +10,7 @@ type Return struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	NewTracking  string         `gorm:"index" json:"new_tracking" example:"JNE0987654321"`
 	OldTracking  string         `gorm:"index" json:"old_tracking" example:"JNE1234567890"`
+	OrderGineeID string         `gorm:"index" json:"order_id" example:"2509116GA36VM5"`
 	ChannelID    uint           `gorm:"not null" json:"channel_id"`
 	StoreID      uint           `gorm:"not null" json:"store_id"`
 	ReturnType   string         `json:"return_type" example:"Cancelled"`
@@ -58,6 +59,7 @@ type ReturnResponse struct {
 	ID            uint                   `json:"id"`
 	NewTracking   string                 `json:"new_tracking"`
 	OldTracking   string                 `json:"old_tracking"`
+	OrderGineeID  string                 `json:"order_id"`
 	ChannelID     uint                   `json:"channel_id"`
 	StoreID       uint                   `json:"store_id"`
 	ReturnType    string                 `json:"return_type"`
@@ -114,6 +116,7 @@ func (r *Return) ToReturnResponse() ReturnResponse {
 		ID:            r.ID,
 		NewTracking:   r.NewTracking,
 		OldTracking:   r.OldTracking,
+		OrderGineeID:  r.OrderGineeID,
 		ChannelID:     r.ChannelID,
 		StoreID:       r.StoreID,
 		ReturnType:    r.ReturnType,

@@ -8785,6 +8785,9 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "order_id": {
+                    "type": "string"
+                },
                 "return_details": {
                     "type": "array",
                     "items": {

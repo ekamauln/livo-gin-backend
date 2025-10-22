@@ -1496,6 +1496,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/models.OrderResponse'
         description: Related data
+      order_id:
+        type: string
       return_details:
         items:
           $ref: '#/definitions/models.ReturnDetailResponse'

@@ -241,15 +241,12 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 	ret.ReturnType = req.ReturnType
 	ret.ReturnReason = req.ReturnReason
 
-	if err := tx.Save(&ret).Error; err != nil {
-		tx.Rollback()
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
-		return
-	}
-
 	// Find order by old_tracking and sync product details
 	var order models.Order
 	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
+		// Copy OrderGineeID from order to return
+		ret.OrderGineeID = order.OrderGineeID
+
 		// Clear existing return details
 		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
 			tx.Rollback()
@@ -275,6 +272,18 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 				}
 			}
 		}
+	} else {
+		// If order not found, rollback transaction
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		return
+	}
+
+	// Save the updated return
+	if err := tx.Save(&ret).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
+		return
 	}
 
 	// Commit transaction
@@ -357,15 +366,12 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 	ret.ReturnNumber = req.ReturnNumber
 	ret.ScrapNumber = req.ScrapNumber
 
-	if err := tx.Save(&ret).Error; err != nil {
-		tx.Rollback()
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
-		return
-	}
-
 	// Find order by old_tracking and sync product details
 	var order models.Order
 	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
+		// Copy OrderGineeID from order to return
+		ret.OrderGineeID = order.OrderGineeID
+
 		// Clear existing return details
 		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
 			tx.Rollback()
@@ -391,6 +397,18 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 				}
 			}
 		}
+	} else {
+		// If order not found, rollback transaction
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		return
+	}
+
+	// Save the updated return
+	if err := tx.Save(&ret).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update return", err.Error())
+		return
 	}
 
 	// Commit transaction
