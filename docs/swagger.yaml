@@ -457,6 +457,8 @@ definitions:
         type: integer
       location:
         type: string
+      product:
+        $ref: '#/definitions/models.ProductResponse'
       product_name:
         type: string
       quantity:
@@ -1220,6 +1222,8 @@ definitions:
     properties:
       id:
         type: integer
+      product:
+        $ref: '#/definitions/models.ProductResponse'
       product_name:
         type: string
       quantity:

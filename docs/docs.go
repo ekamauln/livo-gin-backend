@@ -7196,6 +7196,9 @@ const docTemplate = `{
                 "location": {
                     "type": "string"
                 },
+                "product": {
+                    "$ref": "#/definitions/models.ProductResponse"
+                },
                 "product_name": {
                     "type": "string"
                 },
@@ -8352,6 +8355,9 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
+                },
+                "product": {
+                    "$ref": "#/definitions/models.ProductResponse"
                 },
                 "product_name": {
                     "type": "string"

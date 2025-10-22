@@ -156,9 +156,23 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 	}
 
 	// Get orders with pagination, filters, sorted by ID ascending
-	if err := query.Order("id ASC").Limit(limit).Offset(offset).Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").Preload("OrderDetails").Find(&orders).Error; err != nil {
+	if err := query.Order("id ASC").Limit(limit).Offset(offset).
+		Preload("Picker.UserRoles.Role").
+		Preload("Picker.UserRoles.Assigner").
+		Preload("OrderDetails").
+		Find(&orders).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve orders", err.Error())
 		return
+	}
+
+	// After loading orders, manually fetch and attach products
+	for i := range orders {
+		for j := range orders[i].OrderDetails {
+			var product models.Product
+			if err := oc.DB.Where("sku = ?", orders[i].OrderDetails[j].Sku).First(&product).Error; err == nil {
+				orders[i].OrderDetails[j].Product = &product
+			}
+		}
 	}
 
 	// Convert to response format
@@ -219,13 +233,25 @@ func (oc *OrderController) GetOrder(c *gin.Context) {
 	orderID := c.Param("id")
 	var order models.Order
 
-	if err := oc.DB.Preload("OrderDetails").Preload("Picker.UserRoles.Role").Preload("Picker.UserRoles.Assigner").First(&order, orderID).Error; err != nil {
+	if err := oc.DB.
+		Preload("OrderDetails").
+		Preload("Picker.UserRoles.Role").
+		Preload("Picker.UserRoles.Assigner").
+		First(&order, orderID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "no order found with the specified ID")
 			return
 		}
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve order", err.Error())
 		return
+	}
+
+	// Manually fetch and attach products
+	for i := range order.OrderDetails {
+		var product models.Product
+		if err := oc.DB.Where("sku = ?", order.OrderDetails[i].Sku).First(&product).Error; err == nil {
+			order.OrderDetails[i].Product = &product
+		}
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Order retrieved successfully", order.ToOrderResponse())

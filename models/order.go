@@ -26,16 +26,15 @@ type Order struct {
 }
 
 type OrderDetail struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	OrderID     uint           `gorm:"not null"  json:"order_id"`
-	Sku         string         `gorm:"not null"  json:"sku"`
-	ProductName string         `json:"product_name"`
-	Variant     string         `json:"variant"`
-	Quantity    int            `gorm:"not null" json:"quantity" example:"2"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
-	Order       Order          `gorm:"foreignKey:OrderID" json:"order"`
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	OrderID     uint      `json:"order_id"`
+	Sku         string    `json:"sku" gorm:"index"`
+	ProductName string    `json:"product_name"`
+	Variant     string    `json:"variant"`
+	Quantity    int       `json:"quantity"`
+	Product     *Product  `json:"product,omitempty" gorm:"-"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // OrderResponse represents order data for API responses
@@ -57,24 +56,37 @@ type OrderResponse struct {
 }
 
 type OrderDetailResponse struct {
-	ID          uint   `json:"id"`
-	Sku         string `json:"sku"`
-	ProductName string `json:"product_name"`
-	Variant     string `json:"variant"`
-	Quantity    int    `json:"quantity"`
+	ID          uint             `json:"id"`
+	Sku         string           `json:"sku"`
+	ProductName string           `json:"product_name"`
+	Variant     string           `json:"variant"`
+	Quantity    int              `json:"quantity"`
+	Product     *ProductResponse `json:"product,omitempty"`
 }
 
 // ToOrderResponse converts Order model to OrderResponse
 func (o *Order) ToOrderResponse() OrderResponse {
-	orderDetails := make([]OrderDetailResponse, len(o.OrderDetails))
-	for i, od := range o.OrderDetails {
-		orderDetails[i] = OrderDetailResponse{
-			ID:          od.ID,
-			Sku:         od.Sku,
-			ProductName: od.ProductName,
-			Variant:     od.Variant,
-			Quantity:    od.Quantity,
+	details := make([]OrderDetailResponse, len(o.OrderDetails))
+	for i, detail := range o.OrderDetails {
+		detailResp := OrderDetailResponse{
+			ID:          detail.ID,
+			Sku:         detail.Sku,
+			ProductName: detail.ProductName,
+			Variant:     detail.Variant,
+			Quantity:    detail.Quantity,
 		}
+
+		// Include product data if exists
+		if detail.Product != nil {
+			detailResp.Product = &ProductResponse{
+				ID:    detail.Product.ID,
+				Sku:   detail.Product.Sku,
+				Name:  detail.Product.Name,
+				Image: detail.Product.Image,
+			}
+		}
+
+		details[i] = detailResp
 	}
 
 	// Handle picked_at field
@@ -107,6 +119,6 @@ func (o *Order) ToOrderResponse() OrderResponse {
 		UpdatedAt:    o.UpdatedAt,
 		PickedBy:     pickedByStr,
 		PickedAt:     pickedAtStr,
-		OrderDetails: orderDetails,
+		OrderDetails: details,
 	}
 }
