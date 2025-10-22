@@ -4982,7 +4982,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get a list of all returns (logged in users only)
+      description: Get a list of all returns with optional date range filtering and
+        search (logged in users only)
       parameters:
       - default: 1
         description: Page number
@@ -4994,6 +4995,14 @@ paths:
         in: query
         name: pageSize
         type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
       - description: Search by return new tracking (partial match)
         in: query
         name: search
@@ -5010,6 +5019,10 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.ReturnsListResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
         "401":
           description: Unauthorized
           schema:
