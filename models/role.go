@@ -22,6 +22,7 @@ func GetRoleHierarchy() map[string]int {
 		"superadmin":  9,
 		"coordinator": 4,
 		"admin":       3,
+		"admin-retur": 3,
 		"finance":     3,
 		"picker":      2,
 		"outbound":    2,

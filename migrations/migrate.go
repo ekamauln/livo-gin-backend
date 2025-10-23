@@ -68,6 +68,7 @@ func seedDefaultRoles(db *gorm.DB) {
 		{Name: "superadmin", Description: "Super Administrator with full system access"},
 		{Name: "coordinator", Description: "Coordinator with high-level management access"},
 		{Name: "admin", Description: "Administrator with mid-level management access"},
+		{Name: "admin-retur", Description: "Administrator with mid-level management access"},
 		{Name: "finance", Description: "Finance role with financial management access"},
 		{Name: "picker", Description: "Picker with basic operational access"},
 		{Name: "outbound", Description: "Outbound role with shipping management access"},
