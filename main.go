@@ -22,6 +22,7 @@
 package main
 
 import (
+	"fmt"
 	"livo-gin-backend/config"
 	"livo-gin-backend/controllers"
 	_ "livo-gin-backend/docs" // This is required for Swagger
@@ -67,11 +68,14 @@ func main() {
 	// Setup routes
 	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController, outboundController, onlineFlowController, ribbonFlowController, returnController, returnMobileController, complainController)
 
+	// Build API URL from config
+	apiURL := fmt.Sprintf("http://%s:%s", cfg.APIHost, cfg.Port)
+
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)
-	log.Printf("Health check available at http://192.168.31.136:%s/health", cfg.Port)
-	log.Printf("RapiDoc API documentation available at http://192.168.31.136:%s/docs", cfg.Port)
-	log.Printf("Legacy Swagger UI still available at http://192.168.31.136:%s/swagger/index.html", cfg.Port)
+	log.Printf("Health check available at %s/health", apiURL)
+	log.Printf("RapiDoc API documentation available at %s/docs", apiURL)
+	log.Printf("Legacy Swagger UI still available at %s/swagger/index.html", apiURL)
 
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatal("Failed to start server:", err)

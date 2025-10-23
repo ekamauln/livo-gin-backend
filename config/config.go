@@ -22,6 +22,7 @@ type Config struct {
 	GinMode                string
 	CORSAllowedOrigins     string
 	CORSAllowedMethods     string
+	APIHost                string
 }
 
 func LoadConfig() *Config {
@@ -47,6 +48,7 @@ func LoadConfig() *Config {
 		GinMode:                getEnv("GIN_MODE", "debug"),
 		CORSAllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "*"),
 		CORSAllowedMethods:     getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"),
+		APIHost:                getEnv("API_HOST", "localhost"),
 	}
 }
 
