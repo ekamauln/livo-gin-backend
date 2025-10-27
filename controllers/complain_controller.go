@@ -84,7 +84,7 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 
 	if search != "" {
 		// Search by complain code with partial match
-		query = query.Where("code ILIKE ? OR tracking ILIKE ?", "%"+search+"%", "%"+search+"%")
+		query = query.Where("code ILIKE ? OR tracking ILIKE ? OR order_id ILIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	// Get total count with search filter
