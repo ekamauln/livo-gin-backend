@@ -1115,6 +1115,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/models.OrderResponse'
         description: Related data
+      order_id:
+        type: string
       product_details:
         items:
           $ref: '#/definitions/models.ComplainProductDetailResponse'
@@ -2606,7 +2608,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get list of all complains (logged-in users only)
+      description: Get list of all complains with optional date range filtering and
+        search (logged-in users only)
       parameters:
       - default: 1
         description: Page number
@@ -2618,6 +2621,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
       - description: Search by complain code, tracking (partial match)
         in: query
         name: search
@@ -2634,6 +2645,10 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.ComplainsListResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
         "401":
           description: Unauthorized
           schema:

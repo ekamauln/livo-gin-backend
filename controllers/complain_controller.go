@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"livo-gin-backend/models"
 	"livo-gin-backend/utils"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -21,15 +24,18 @@ func NewComplainController(db *gorm.DB) *ComplainController {
 
 // GetComplains godoc
 // @Summary Get all complains
-// @Description Get list of all complains (logged-in users only)
+// @Description Get list of all complains with optional date range filtering and search (logged-in users only)
 // @Tags complains
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param start_date query string false "Start date (YYYY-MM-DD format)"
+// @Param end_date query string false "End date (YYYY-MM-DD format)"
 // @Param search query string false "Search by complain code, tracking (partial match)"
 // @Success 200 {object} utils.Response{data=ComplainsListResponse}
+// @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
 // @Router /api/complains [get]
@@ -39,6 +45,10 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
+	// Parse date range parameters
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
 	// Parse search parameter
 	search := c.Query("search")
 
@@ -47,6 +57,30 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 
 	// Build query with optional search
 	query := cc.DB.Model(&models.Complain{})
+
+	// Apply date range filters if provided
+	if startDate != "" {
+		// Parse start date and set time to beginning of day
+		if parsedStartDate, err := time.Parse("2006-01-02", startDate); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid start_date format", "start_date must be in YYYY-MM-DD format")
+			return
+		} else {
+			startOfDay := parsedStartDate.Format("2006-01-02 00:00:00")
+			query = query.Where("created_at >= ?", startOfDay)
+		}
+	}
+
+	if endDate != "" {
+		// Parse end date and set time to end of day
+		if parsedEndDate, err := time.Parse("2006-01-02", endDate); err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Invalid end_date format", "end_date must be in YYYY-MM-DD format")
+			return
+		} else {
+			// Add 24 hours to get the start of next day, then use < instead of <=
+			nextDay := parsedEndDate.AddDate(0, 0, 1).Format("2006-01-02 00:00:00")
+			query = query.Where("created_at < ?", nextDay)
+		}
+	}
 
 	if search != "" {
 		// Search by complain code with partial match
@@ -61,11 +95,13 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 
 	// ADDED: Preload relationships for complete data
 	if err := query.
-		Preload("ComplainProductDetails.Product").
-		Preload("ComplainUserDetails.User").
+		Preload("ProductDetails.Product").
+		Preload("UserDetails.User.UserRoles.Role").
+		Preload("UserDetails.User.UserRoles.Assigner").
 		Preload("Channel").
 		Preload("Store").
-		Preload("User").
+		Preload("Creator.UserRoles.Role").
+		Preload("Creator.UserRoles.Assigner").
 		Order("id DESC").
 		Limit(limit).
 		Offset(offset).
@@ -104,8 +140,25 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 
 	// Build success message
 	message := "Complains retrieved successfully"
+	var filters []string
+
+	if startDate != "" || endDate != "" {
+		var dateRange []string
+		if startDate != "" {
+			dateRange = append(dateRange, "from: "+startDate)
+		}
+		if endDate != "" {
+			dateRange = append(dateRange, "to: "+endDate)
+		}
+		filters = append(filters, "date: "+strings.Join(dateRange, ", "))
+	}
+
 	if search != "" {
-		message += " (filtered by search: " + search + ")"
+		filters = append(filters, "search: "+search)
+	}
+
+	if len(filters) > 0 {
+		message += fmt.Sprintf(" (filtered by %s)", strings.Join(filters, " | "))
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, message, response)
@@ -128,11 +181,13 @@ func (cc *ComplainController) GetComplain(c *gin.Context) {
 	complainID := c.Param("id")
 
 	var complain models.Complain
-	if err := cc.DB.Preload("ComplainProductDetails.Product").
-		Preload("ComplainUserDetails.User").
+	if err := cc.DB.Preload("ProductDetails.Product").
+		Preload("UserDetails.User.UserRoles.Role").
+		Preload("UserDetails.User.UserRoles.Assigner").
 		Preload("Channel").
 		Preload("Store").
-		Preload("User").
+		Preload("Creator.UserRoles.Role").
+		Preload("Creator.UserRoles.Assigner").
 		First(&complain, complainID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Complain not found", err.Error())
 		return
@@ -201,16 +256,25 @@ func (cc *ComplainController) CreateComplain(c *gin.Context) {
 		}
 	}()
 
+	// Find order by tracking to get OrderGineeID and populate product details
+	var order models.Order
+	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.Tracking).First(&order).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		return
+	}
+
 	// Generate complain code with username
 	complainCode := utils.GenerateComplainCode(cc.DB, username.(string))
 
 	complain := models.Complain{
-		Code:        complainCode,
-		Tracking:    req.Tracking,
-		ChannelID:   req.ChannelID,
-		StoreID:     req.StoreID,
-		Description: req.Description,
-		UserID:      userID.(uint),
+		Code:         complainCode,
+		Tracking:     req.Tracking,
+		OrderGineeID: order.OrderGineeID, // ADDED: Fill OrderGineeID from order
+		ChannelID:    req.ChannelID,
+		StoreID:      req.StoreID,
+		Description:  req.Description,
+		UserID:       userID.(uint),
 	}
 
 	// Create the complain
@@ -221,23 +285,20 @@ func (cc *ComplainController) CreateComplain(c *gin.Context) {
 	}
 
 	// Populate product details from order details
-	var order models.Order
-	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.Tracking).First(&order).Error; err == nil {
-		for _, orderDetail := range order.OrderDetails {
-			// Find product by SKU
-			var product models.Product
-			if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
-				productDetail := models.ComplainProductDetail{
-					ComplainID: complain.ID,
-					ProductID:  product.ID,
-					Quantity:   orderDetail.Quantity,
-				}
+	for _, orderDetail := range order.OrderDetails {
+		// Find product by SKU
+		var product models.Product
+		if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
+			productDetail := models.ComplainProductDetail{
+				ComplainID: complain.ID,
+				ProductID:  product.ID,
+				Quantity:   orderDetail.Quantity,
+			}
 
-				if err := tx.Create(&productDetail).Error; err != nil {
-					tx.Rollback()
-					utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create product detail", err.Error())
-					return
-				}
+			if err := tx.Create(&productDetail).Error; err != nil {
+				tx.Rollback()
+				utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create product detail", err.Error())
+				return
 			}
 		}
 	}
@@ -303,23 +364,17 @@ func (cc *ComplainController) CreateComplain(c *gin.Context) {
 	}
 
 	// Load the created complain with all relationships for complete response
-	cc.DB.Preload("ComplainProductDetails.Product").
-		Preload("ComplainUserDetails.User").
+	cc.DB.Preload("ProductDetails.Product").
+		Preload("UserDetails.User.UserRoles.Role").
+		Preload("UserDetails.User.UserRoles.Assigner").
 		Preload("Channel").
 		Preload("Store").
-		Preload("User").
+		Preload("Creator.UserRoles.Role").
+		Preload("Creator.UserRoles.Assigner").
 		First(&complain, complain.ID)
 
-	// Load order data if tracking exists
-	if complain.Tracking != "" {
-		var order models.Order
-		if err := cc.DB.Preload("OrderDetails").
-			Preload("Picker.UserRoles.Role").
-			Preload("Picker.UserRoles.Assigner").
-			Where("tracking = ?", complain.Tracking).First(&order).Error; err == nil {
-			complain.Order = &order
-		}
-	}
+	// Load order data (already found above)
+	complain.Order = &order
 
 	utils.SuccessResponse(c, http.StatusCreated, "Complain created successfully", complain.ToComplainResponse())
 }
@@ -412,11 +467,13 @@ func (cc *ComplainController) UpdateSolutionComplain(c *gin.Context) {
 	}
 
 	// Load updated complain with all relationships
-	cc.DB.Preload("ComplainProductDetails.Product").
-		Preload("ComplainUserDetails.User").
+	cc.DB.Preload("ProductDetails.Product").
+		Preload("UserDetails.User.UserRoles.Role").
+		Preload("UserDetails.User.UserRoles.Assigner").
 		Preload("Channel").
 		Preload("Store").
-		Preload("User").
+		Preload("Creator.UserRoles.Role").
+		Preload("Creator.UserRoles.Assigner").
 		First(&complain, complain.ID)
 
 	// Load order data if tracking exists
@@ -472,11 +529,13 @@ func (cc *ComplainController) UpdateCheckComplain(c *gin.Context) {
 	}
 
 	// Load updated complain with all relationships
-	cc.DB.Preload("ComplainProductDetails.Product").
-		Preload("ComplainUserDetails.User").
+	cc.DB.Preload("ProductDetails.Product").
+		Preload("UserDetails.User.UserRoles.Role").
+		Preload("UserDetails.User.UserRoles.Assigner").
 		Preload("Channel").
 		Preload("Store").
-		Preload("User").
+		Preload("Creator.UserRoles.Role").
+		Preload("Creator.UserRoles.Assigner").
 		First(&complain, complain.ID)
 
 	// Load order data if tracking exists

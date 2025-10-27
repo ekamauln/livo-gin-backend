@@ -1667,7 +1667,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all complains (logged-in users only)",
+                "description": "Get list of all complains with optional date range filtering and search (logged-in users only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1695,6 +1695,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Start date (YYYY-MM-DD format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Search by complain code, tracking (partial match)",
                         "name": "search",
                         "in": "query"
@@ -1717,6 +1729,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "401": {
@@ -8202,6 +8220,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.OrderResponse"
                         }
                     ]
+                },
+                "order_id": {
+                    "type": "string"
                 },
                 "product_details": {
                     "type": "array",

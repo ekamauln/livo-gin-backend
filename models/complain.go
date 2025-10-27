@@ -7,19 +7,20 @@ import (
 )
 
 type Complain struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	Code        string         `gorm:"unique;not null" json:"code" example:"CMP123456"`
-	Tracking    string         `gorm:"index" json:"tracking" example:"JNE1234567890"`
-	ChannelID   uint           `gorm:"not null" json:"channel_id"`
-	StoreID     uint           `gorm:"not null" json:"store_id"`
-	UserID      uint           `gorm:"not null" json:"user_id"` // User who created the complain
-	Description string         `json:"description" example:"Item damaged during shipping"`
-	Solution    string         `json:"solution" example:"Refund issued"`
-	TotalFee    uint           `json:"total_fee" example:"15000"`
-	Checked     bool           `gorm:"default:false" json:"checked" example:"false"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	Code         string         `gorm:"unique;not null" json:"code" example:"CMP123456"`
+	Tracking     string         `gorm:"index" json:"tracking" example:"JNE1234567890"`
+	OrderGineeID string         `gorm:"index" json:"order_id" example:"2509116GA36VM5"`
+	ChannelID    uint           `gorm:"not null" json:"channel_id"`
+	StoreID      uint           `gorm:"not null" json:"store_id"`
+	UserID       uint           `gorm:"not null" json:"user_id"` // User who created the complain
+	Description  string         `json:"description" example:"Item damaged during shipping"`
+	Solution     string         `json:"solution" example:"Refund issued"`
+	TotalFee     uint           `json:"total_fee" example:"15000"`
+	Checked      bool           `gorm:"default:false" json:"checked" example:"false"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// One-to-many relationships
 	ProductDetails []ComplainProductDetail `gorm:"foreignKey:ComplainID" json:"product_details"`
@@ -85,6 +86,7 @@ type ComplainResponse struct {
 	ID             uint                            `json:"id"`
 	Code           string                          `json:"code"`
 	Tracking       string                          `json:"tracking"`
+	OrderGineeID   string                          `json:"order_id"`
 	ChannelID      uint                            `json:"channel_id"`
 	StoreID        uint                            `json:"store_id"`
 	UserID         uint                            `json:"user_id"`
@@ -150,6 +152,7 @@ func (c *Complain) ToComplainResponse() ComplainResponse {
 		ID:             c.ID,
 		Code:           c.Code,
 		Tracking:       c.Tracking,
+		OrderGineeID:   c.OrderGineeID,
 		ChannelID:      c.ChannelID,
 		StoreID:        c.StoreID,
 		UserID:         c.UserID,
