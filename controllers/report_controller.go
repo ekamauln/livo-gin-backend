@@ -349,24 +349,30 @@ func (rc *ReportController) GetReturnReports(c *gin.Context) {
 		return
 	}
 
-	// Get all return records with available preloaded relationships only
+	// Get all return records with preloaded relationships
 	if err := query.
-		Preload("Channel").
-		Preload("Store").
+		Preload("ReturnDetails", "deleted_at IS NULL").        // Load return details (non-deleted only)
+		Preload("ReturnDetails.Product").                      // Load product info for each detail
+		Preload("Channel").                                    // Load channel info
+		Preload("Store").                                     // Load store info
 		Order("id DESC").
 		Find(&returns).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve return reports", err.Error())
 		return
 	}
 
-	// Load order data for each return
+	// Manually load order data for each return using OldTracking
 	for i := range returns {
 		if returns[i].OldTracking != "" {
 			var order models.Order
-			if err := rc.DB.Preload("OrderDetails").
+			if err := rc.DB.
+				Preload("OrderDetails").
+				Preload("OrderDetails.Product").
+				Preload("Picker").
 				Preload("Picker.UserRoles.Role").
 				Preload("Picker.UserRoles.Assigner").
-				Where("tracking = ?", returns[i].OldTracking).First(&order).Error; err == nil {
+				Where("tracking = ?", returns[i].OldTracking).
+				First(&order).Error; err == nil {
 				returns[i].Order = &order
 			}
 		}
