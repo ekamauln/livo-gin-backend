@@ -76,7 +76,7 @@ func (ac *AdminController) GetUsers(c *gin.Context) {
 
 	response := UsersListResponse{
 		Users: userResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -716,7 +716,7 @@ func (ac *AdminController) GetRoles(c *gin.Context) {
 
 	response := RoleListResponse{
 		Roles: roleResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -728,19 +728,13 @@ func (ac *AdminController) GetRoles(c *gin.Context) {
 
 // Request/Response structs
 type UsersListResponse struct {
-	Users      []models.UserResponse `json:"users"`
-	Pagination PaginationResponse    `json:"pagination"`
+	Users      []models.UserResponse    `json:"users"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type RoleListResponse struct {
 	Roles      []models.RoleListResponse `json:"roles"`
-	Pagination PaginationResponse        `json:"pagination"`
-}
-
-type PaginationResponse struct {
-	Page  int `json:"page"`
-	Limit int `json:"limit"`
-	Total int `json:"total"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type CreateUserRequest struct {

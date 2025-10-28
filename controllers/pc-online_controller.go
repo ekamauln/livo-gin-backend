@@ -117,7 +117,7 @@ func (pc *PcOnlineController) GetPcOnlines(c *gin.Context) {
 
 	response := PcOnlinesListResponse{
 		PcOnlines: pcOnlineResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -341,7 +341,7 @@ func (pc *PcOnlineController) CreatePcOnline(c *gin.Context) {
 // Request/Response structs
 type PcOnlinesListResponse struct {
 	PcOnlines  []models.PcOnlineResponse `json:"pc_onlines"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type PcOnlineDetailRequest struct {

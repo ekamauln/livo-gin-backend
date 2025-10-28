@@ -74,7 +74,7 @@ func (cc *ChannelController) GetChannels(c *gin.Context) {
 
 	response := ChannelsListResponse{
 		Channels: channelResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -241,7 +241,7 @@ func (cc *ChannelController) CreateChannel(c *gin.Context) {
 // Request/Response structs
 type ChannelsListResponse struct {
 	Channels   []models.ChannelResponse `json:"channels"`
-	Pagination PaginationResponse       `json:"pagination"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type UpdateChannelRequest struct {

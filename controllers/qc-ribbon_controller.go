@@ -118,7 +118,7 @@ func (qrc *QcRibbonController) GetQcRibbons(c *gin.Context) {
 
 	response := QcRibbonsListResponse{
 		QcRibbons: qcRibbonResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -306,7 +306,7 @@ func (qrc *QcRibbonController) CreateQcRibbon(c *gin.Context) {
 // Request/Response structs
 type QcRibbonsListResponse struct {
 	QcRibbons  []models.QcRibbonResponse `json:"qc_ribbons"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type QcRibbonDetailRequest struct {

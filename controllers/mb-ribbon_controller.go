@@ -94,7 +94,7 @@ func (mrc *MbRibbonController) GetMbRibbons(c *gin.Context) {
 
 	response := MbRibbonsListResponse{
 		MbRibbons: mbRibbonResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -241,7 +241,7 @@ func (mrc *MbRibbonController) CreateMbRibbon(c *gin.Context) {
 // Request/Response structs
 type MbRibbonsListResponse struct {
 	MbRibbons  []models.MbRibbonResponse `json:"mb_ribbons"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type CreateMbRibbonRequest struct {

@@ -74,7 +74,7 @@ func (bc *BoxController) GetBoxes(c *gin.Context) {
 
 	response := BoxesListResponse{
 		Boxes: boxResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -240,8 +240,8 @@ func (bc *BoxController) CreateBox(c *gin.Context) {
 
 // Request/Response structs
 type BoxesListResponse struct {
-	Boxes      []models.BoxResponse `json:"boxes"`
-	Pagination PaginationResponse   `json:"pagination"`
+	Boxes      []models.BoxResponse     `json:"boxes"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type UpdateBoxRequest struct {

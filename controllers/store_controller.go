@@ -74,7 +74,7 @@ func (sc *StoreController) GetStores(c *gin.Context) {
 
 	response := StoresListResponse{
 		Stores: storeResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -239,8 +239,8 @@ func (sc *StoreController) CreateStore(c *gin.Context) {
 
 // Request/Response structs
 type StoresListResponse struct {
-	Stores     []models.StoreResponse `json:"stores"`
-	Pagination PaginationResponse     `json:"pagination"`
+	Stores     []models.StoreResponse   `json:"stores"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type UpdateStoreRequest struct {

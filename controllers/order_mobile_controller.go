@@ -146,7 +146,7 @@ func (omc *OrderMobileController) GetOrders(c *gin.Context) {
 
 	response := MobileOrdersListResponse{
 		Orders: orderResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -481,7 +481,7 @@ type MobileOrderListResponse struct {
 
 type MobileOrdersListResponse struct {
 	Orders     []MobileOrderListResponse `json:"orders"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type MobileOrderDetailWithProduct struct {

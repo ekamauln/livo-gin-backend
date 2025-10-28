@@ -131,7 +131,7 @@ func (cc *ComplainController) GetComplains(c *gin.Context) {
 
 	response := ComplainsListResponse{
 		Complains: complainResponse,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -555,7 +555,7 @@ func (cc *ComplainController) UpdateCheckComplain(c *gin.Context) {
 // Request/Response structs
 type ComplainsListResponse struct {
 	Complains  []models.ComplainResponse `json:"complains"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type CreateComplainRequest struct {

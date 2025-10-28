@@ -73,7 +73,7 @@ func (pc *ProductController) GetProducts(c *gin.Context) {
 
 	response := ProductsListResponse{
 		Products: productResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -229,7 +229,7 @@ func (pc *ProductController) CreateProduct(c *gin.Context) {
 // Request/Response structs
 type ProductsListResponse struct {
 	Products   []models.ProductResponse `json:"products"`
-	Pagination PaginationResponse       `json:"pagination"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type UpdateProductRequest struct {

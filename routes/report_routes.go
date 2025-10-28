@@ -1,0 +1,24 @@
+package routes
+
+import (
+	"livo-gin-backend/config"
+	"livo-gin-backend/controllers"
+	"livo-gin-backend/middleware"
+
+	"github.com/gin-gonic/gin"
+)
+
+// SetupReportRoutes configures report-related routes
+func SetupReportRoutes(api *gin.RouterGroup, cfg *config.Config, reportController *controllers.ReportController) {
+	// Report routes (authenticated)
+	report := api.Group("/reports")
+	report.Use(middleware.AuthMiddleware(cfg))
+	{
+		// Public report routes
+		report.GET("/boxes-count", reportController.GetBoxReports)            // Get box count reports
+		report.GET("/handout-outbounds", reportController.GetOutboundReports) // Get handout outbound reports
+		report.GET("/handout-returns", reportController.GetReturnReports)     // Get handout return reports
+		report.GET("/handout-complains", reportController.GetComplainReports) // Get handout complain reports
+		report.GET("/user-fees", reportController.GetUserFeeReports)          // Get user fee reports
+	}
+}

@@ -13,6 +13,13 @@ type Response struct {
 	Error   string      `json:"error,omitempty"`
 }
 
+// PaginationResponse represents pagination info
+type PaginationResponse struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+	Total int `json:"total"`
+}
+
 // SuccessResponse returns a success response
 func SuccessResponse(c *gin.Context, statusCode int, message string, data interface{}) {
 	c.JSON(statusCode, Response{

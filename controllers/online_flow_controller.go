@@ -108,7 +108,7 @@ func (ofc *OnlineFlowController) GetOnlineFlows(c *gin.Context) {
 
 	response := OnlineFlowsListResponse{
 		OnlineFlows: onlineFlows,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -268,8 +268,8 @@ func (ofc *OnlineFlowController) buildOnlineFlow(tracking string) OnlineFlowResp
 
 // Request/Response structs - REORDERED to match flow
 type OnlineFlowsListResponse struct {
-	OnlineFlows []OnlineFlowResponse `json:"online_flows"`
-	Pagination  PaginationResponse   `json:"pagination"`
+	OnlineFlows []OnlineFlowResponse     `json:"online_flows"`
+	Pagination  utils.PaginationResponse `json:"pagination"`
 }
 
 // REORDERED: mb-online -> qc-online -> pc-online -> order

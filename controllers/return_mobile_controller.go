@@ -74,7 +74,7 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 
 	response := ReturnMobilesListResponse{
 		ReturnMobiles: returnMobileResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -164,7 +164,7 @@ func (rmc *ReturnMobileController) CreateReturnMobile(c *gin.Context) {
 // Request/Response structs
 type ReturnMobilesListResponse struct {
 	ReturnMobiles []models.ReturnMobileResponse `json:"return_mobiles"`
-	Pagination    PaginationResponse            `json:"pagination"`
+	Pagination    utils.PaginationResponse      `json:"pagination"`
 }
 
 type CreateReturnMobileRequest struct {

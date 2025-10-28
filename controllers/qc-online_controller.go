@@ -117,7 +117,7 @@ func (qoc *QcOnlineController) GetQcOnlines(c *gin.Context) {
 
 	response := QcOnlinesListResponse{
 		QcOnlines: qcOnlineResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -305,7 +305,7 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 // Request/Response structs
 type QcOnlinesListResponse struct {
 	QcOnlines  []models.QcOnlineResponse `json:"qc_onlines"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type QcOnlineDetailRequest struct {

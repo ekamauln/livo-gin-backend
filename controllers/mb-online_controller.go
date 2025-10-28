@@ -94,7 +94,7 @@ func (moc *MbOnlineController) GetMbOnlines(c *gin.Context) {
 
 	response := MbOnlinesListResponse{
 		MbOnlines: mbOnlineResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -243,7 +243,7 @@ func (moc *MbOnlineController) CreateMbOnline(c *gin.Context) {
 // Request/Response structs
 type MbOnlinesListResponse struct {
 	MbOnlines  []models.MbOnlineResponse `json:"mb_onlines"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type CreateMbOnlineRequest struct {

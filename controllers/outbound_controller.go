@@ -103,7 +103,7 @@ func (oc *OutboundController) GetOutbounds(c *gin.Context) {
 
 	response := OutboundsListResponse{
 		Outbounds: outboundResponse,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -365,7 +365,7 @@ func (oc *OutboundController) CreateOutbound(c *gin.Context) {
 // Request/Response structs
 type OutboundsListResponse struct {
 	Outbounds  []models.OutboundResponse `json:"outbounds"`
-	Pagination PaginationResponse        `json:"pagination"`
+	Pagination utils.PaginationResponse  `json:"pagination"`
 }
 
 type UpdateOutboundRequest struct {

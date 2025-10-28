@@ -8,6 +8,30 @@ definitions:
     required:
     - role_name
     type: object
+  controllers.BoxCountReport:
+    properties:
+      box_code:
+        type: string
+      box_id:
+        type: integer
+      box_name:
+        type: string
+      online_count:
+        type: integer
+      ribbon_count:
+        type: integer
+      total_count:
+        type: integer
+    type: object
+  controllers.BoxCountReportsListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/utils.PaginationResponse'
+      reports:
+        items:
+          $ref: '#/definitions/controllers.BoxCountReport'
+        type: array
+    type: object
   controllers.BoxesListResponse:
     properties:
       boxes:
@@ -15,7 +39,7 @@ definitions:
           $ref: '#/definitions/models.BoxResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.BulkCreateOrderRequest:
     properties:
@@ -62,7 +86,31 @@ definitions:
           $ref: '#/definitions/models.ChannelResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
+    type: object
+  controllers.ComplainDetailInReport:
+    properties:
+      complain_code:
+        type: string
+      complain_id:
+        type: integer
+      complain_updated_at:
+        type: string
+      fee_charge:
+        type: integer
+      order_ginee_id:
+        type: string
+      tracking:
+        type: string
+    type: object
+  controllers.ComplainReportsListResponse:
+    properties:
+      complains:
+        items:
+          $ref: '#/definitions/models.ComplainResponse'
+        type: array
+      total:
+        type: integer
     type: object
   controllers.ComplainUserDetailRequest:
     properties:
@@ -83,7 +131,7 @@ definitions:
           $ref: '#/definitions/models.ComplainResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.CreateBaseReturnRequest:
     properties:
@@ -354,7 +402,7 @@ definitions:
           $ref: '#/definitions/models.ExpeditionResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.FailedOrder:
     properties:
@@ -400,7 +448,7 @@ definitions:
           $ref: '#/definitions/models.MbOnlineResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.MbRibbonFlowInfo:
     properties:
@@ -416,7 +464,7 @@ definitions:
           $ref: '#/definitions/models.MbRibbonResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.MobileOrderDetailResponse:
     properties:
@@ -506,7 +554,7 @@ definitions:
           $ref: '#/definitions/controllers.MobileOrderListResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.OnlineFlowResponse:
     properties:
@@ -530,7 +578,7 @@ definitions:
           $ref: '#/definitions/controllers.OnlineFlowResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.OnlineOrderFlowInfo:
     properties:
@@ -594,7 +642,16 @@ definitions:
           $ref: '#/definitions/models.OrderResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
+    type: object
+  controllers.OutboundReportsListResponse:
+    properties:
+      outbounds:
+        items:
+          $ref: '#/definitions/models.OutboundResponse'
+        type: array
+      total:
+        type: integer
     type: object
   controllers.OutboundsListResponse:
     properties:
@@ -603,16 +660,7 @@ definitions:
           $ref: '#/definitions/models.OutboundResponse'
         type: array
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
-    type: object
-  controllers.PaginationResponse:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
+        $ref: '#/definitions/utils.PaginationResponse'
     type: object
   controllers.PcOnlineDetailRequest:
     properties:
@@ -637,7 +685,7 @@ definitions:
   controllers.PcOnlinesListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       pc_onlines:
         items:
           $ref: '#/definitions/models.PcOnlineResponse'
@@ -646,7 +694,7 @@ definitions:
   controllers.ProductsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       products:
         items:
           $ref: '#/definitions/models.ProductResponse'
@@ -675,7 +723,7 @@ definitions:
   controllers.QcOnlinesListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       qc_onlines:
         items:
           $ref: '#/definitions/models.QcOnlineResponse'
@@ -704,7 +752,7 @@ definitions:
   controllers.QcRibbonsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       qc_ribbons:
         items:
           $ref: '#/definitions/models.QcRibbonResponse'
@@ -751,16 +799,25 @@ definitions:
   controllers.ReturnMobilesListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       return_mobiles:
         items:
           $ref: '#/definitions/models.ReturnMobileResponse'
         type: array
     type: object
+  controllers.ReturnReportsListResponse:
+    properties:
+      returns:
+        items:
+          $ref: '#/definitions/models.ReturnResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   controllers.ReturnsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       returns:
         items:
           $ref: '#/definitions/models.ReturnResponse'
@@ -782,7 +839,7 @@ definitions:
   controllers.RibbonFlowsListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       ribbon_flows:
         items:
           $ref: '#/definitions/controllers.RibbonFlowResponse'
@@ -831,7 +888,7 @@ definitions:
   controllers.StoresListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       stores:
         items:
           $ref: '#/definitions/models.StoreResponse'
@@ -1036,10 +1093,38 @@ definitions:
         example: true
         type: boolean
     type: object
+  controllers.UserFeeReportWithDetails:
+    properties:
+      complain_details:
+        items:
+          $ref: '#/definitions/controllers.ComplainDetailInReport'
+        type: array
+      email:
+        type: string
+      full_name:
+        type: string
+      total_complaints:
+        type: integer
+      total_fee_charge:
+        type: integer
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  controllers.UserFeeReportsWithDetailsListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/utils.PaginationResponse'
+      reports:
+        items:
+          $ref: '#/definitions/controllers.UserFeeReportWithDetails'
+        type: array
+    type: object
   controllers.UsersListResponse:
     properties:
       pagination:
-        $ref: '#/definitions/controllers.PaginationResponse'
+        $ref: '#/definitions/utils.PaginationResponse'
       users:
         items:
           $ref: '#/definitions/models.UserResponse'
@@ -1580,6 +1665,15 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  utils.PaginationResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
     type: object
   utils.Response:
     properties:
@@ -4993,6 +5087,250 @@ paths:
       summary: Get a specific qc-ribbon by ID
       tags:
       - qc-ribbons
+  /api/reports/boxes-count:
+    get:
+      consumes:
+      - application/json
+      description: Get box usage count from QC Ribbon and QC Online details with date
+        range filtering, excluding PC/Packing boxes (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
+      - description: Search by box code or name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.BoxCountReportsListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get box count reports
+      tags:
+      - reports
+  /api/reports/handout-complains:
+    get:
+      consumes:
+      - application/json
+      description: Get complain reports with date filtering and exact complain type
+        search, without pagination (logged-in users only)
+      parameters:
+      - description: Filter by date (YYYY-MM-DD format)
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ComplainReportsListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get complain reports
+      tags:
+      - reports
+  /api/reports/handout-outbounds:
+    get:
+      consumes:
+      - application/json
+      description: Get outbound reports with date filtering and exact slug search,
+        without pagination (logged-in users only)
+      parameters:
+      - description: Filter by date (YYYY-MM-DD format)
+        in: query
+        name: date
+        type: string
+      - description: Search by exact slug match
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.OutboundReportsListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get outbound reports
+      tags:
+      - reports
+  /api/reports/handout-returns:
+    get:
+      consumes:
+      - application/json
+      description: Get return reports with date filtering and exact return type search,
+        without pagination (logged-in users only)
+      parameters:
+      - description: Filter by date (YYYY-MM-DD format)
+        in: query
+        name: date
+        type: string
+      - description: Search by exact return type match
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ReturnReportsListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get return reports
+      tags:
+      - reports
+  /api/reports/user-fees:
+    get:
+      consumes:
+      - application/json
+      description: Get user fee reports with detailed records, date filtering and
+        exact user search, with pagination (logged-in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
+      - description: Search by exact user ID match
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.UserFeeReportsWithDetailsListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user fee reports
+      tags:
+      - reports
   /api/returns:
     get:
       consumes:

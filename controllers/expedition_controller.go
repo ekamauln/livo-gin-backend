@@ -74,7 +74,7 @@ func (ec *ExpeditionController) GetExpeditions(c *gin.Context) {
 
 	response := ExpeditionsListResponse{
 		Expeditions: expeditionResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -248,7 +248,7 @@ func (ec *ExpeditionController) CreateExpedition(c *gin.Context) {
 // Request/Response structs
 type ExpeditionsListResponse struct {
 	Expeditions []models.ExpeditionResponse `json:"expeditions"`
-	Pagination  PaginationResponse          `json:"pagination"`
+	Pagination  utils.PaginationResponse    `json:"pagination"`
 }
 
 type UpdateExpeditionRequest struct {

@@ -122,7 +122,7 @@ func (rc *ReturnController) GetReturns(c *gin.Context) {
 
 	response := ReturnsListResponse{
 		Returns: returnResponse,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -489,8 +489,8 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 
 // Request/Response structs
 type ReturnsListResponse struct {
-	Returns    []models.ReturnResponse `json:"returns"`
-	Pagination PaginationResponse      `json:"pagination"`
+	Returns    []models.ReturnResponse  `json:"returns"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type CreateBaseReturnRequest struct {

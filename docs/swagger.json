@@ -5557,6 +5557,400 @@
                 }
             }
         },
+        "/api/reports/boxes-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get box usage count from QC Ribbon and QC Online details with date range filtering, excluding PC/Packing boxes (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get box count reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by box code or name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.BoxCountReportsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/handout-complains": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get complain reports with date filtering and exact complain type search, without pagination (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get complain reports",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by date (YYYY-MM-DD format)",
+                        "name": "date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.ComplainReportsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/handout-outbounds": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get outbound reports with date filtering and exact slug search, without pagination (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get outbound reports",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by date (YYYY-MM-DD format)",
+                        "name": "date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by exact slug match",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OutboundReportsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/handout-returns": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get return reports with date filtering and exact return type search, without pagination (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get return reports",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by date (YYYY-MM-DD format)",
+                        "name": "date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by exact return type match",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.ReturnReportsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/user-fees": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get user fee reports with detailed records, date filtering and exact user search, with pagination (logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get user fee reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by exact user ID match",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.UserFeeReportsWithDetailsListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/returns": {
             "get": {
                 "security": [
@@ -6568,6 +6962,43 @@
                 }
             }
         },
+        "controllers.BoxCountReport": {
+            "type": "object",
+            "properties": {
+                "box_code": {
+                    "type": "string"
+                },
+                "box_id": {
+                    "type": "integer"
+                },
+                "box_name": {
+                    "type": "string"
+                },
+                "online_count": {
+                    "type": "integer"
+                },
+                "ribbon_count": {
+                    "type": "integer"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controllers.BoxCountReportsListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationResponse"
+                },
+                "reports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.BoxCountReport"
+                    }
+                }
+            }
+        },
         "controllers.BoxesListResponse": {
             "type": "object",
             "properties": {
@@ -6578,7 +7009,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -6650,7 +7081,44 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
+                }
+            }
+        },
+        "controllers.ComplainDetailInReport": {
+            "type": "object",
+            "properties": {
+                "complain_code": {
+                    "type": "string"
+                },
+                "complain_id": {
+                    "type": "integer"
+                },
+                "complain_updated_at": {
+                    "type": "string"
+                },
+                "fee_charge": {
+                    "type": "integer"
+                },
+                "order_ginee_id": {
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.ComplainReportsListResponse": {
+            "type": "object",
+            "properties": {
+                "complains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ComplainResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -6681,7 +7149,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7068,7 +7536,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7138,7 +7606,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7163,7 +7631,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7300,7 +7768,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7337,7 +7805,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7436,7 +7904,21 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
+                }
+            }
+        },
+        "controllers.OutboundReportsListResponse": {
+            "type": "object",
+            "properties": {
+                "outbounds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OutboundResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -7450,21 +7932,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
-                }
-            }
-        },
-        "controllers.PaginationResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 }
             }
         },
@@ -7501,7 +7969,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "pc_onlines": {
                     "type": "array",
@@ -7515,7 +7983,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "products": {
                     "type": "array",
@@ -7558,7 +8026,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "qc_onlines": {
                     "type": "array",
@@ -7601,7 +8069,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "qc_ribbons": {
                     "type": "array",
@@ -7668,7 +8136,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "return_mobiles": {
                     "type": "array",
@@ -7678,11 +8146,25 @@
                 }
             }
         },
+        "controllers.ReturnReportsListResponse": {
+            "type": "object",
+            "properties": {
+                "returns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ReturnResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.ReturnsListResponse": {
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "returns": {
                     "type": "array",
@@ -7716,7 +8198,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "ribbon_flows": {
                     "type": "array",
@@ -7792,7 +8274,7 @@
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "stores": {
                     "type": "array",
@@ -8089,11 +8571,54 @@
                 }
             }
         },
+        "controllers.UserFeeReportWithDetails": {
+            "type": "object",
+            "properties": {
+                "complain_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.ComplainDetailInReport"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "total_complaints": {
+                    "type": "integer"
+                },
+                "total_fee_charge": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UserFeeReportsWithDetailsListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationResponse"
+                },
+                "reports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.UserFeeReportWithDetails"
+                    }
+                }
+            }
+        },
         "controllers.UsersListResponse": {
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/controllers.PaginationResponse"
+                    "$ref": "#/definitions/utils.PaginationResponse"
                 },
                 "users": {
                     "type": "array",
@@ -8941,6 +9466,20 @@
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "utils.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

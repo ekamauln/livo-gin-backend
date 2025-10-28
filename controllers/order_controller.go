@@ -183,7 +183,7 @@ func (oc *OrderController) GetOrders(c *gin.Context) {
 
 	response := OrdersListResponse{
 		Orders: orderResponses,
-		Pagination: PaginationResponse{
+		Pagination: utils.PaginationResponse{
 			Page:  page,
 			Limit: limit,
 			Total: int(total),
@@ -701,8 +701,8 @@ type UpdateOrderDetailRequest struct {
 }
 
 type OrdersListResponse struct {
-	Orders     []models.OrderResponse `json:"orders"`
-	Pagination PaginationResponse     `json:"pagination"`
+	Orders     []models.OrderResponse   `json:"orders"`
+	Pagination utils.PaginationResponse `json:"pagination"`
 }
 
 type CreateOrderRequest struct {
