@@ -349,14 +349,10 @@ func (rc *ReportController) GetReturnReports(c *gin.Context) {
 		return
 	}
 
-	// Get all return records with preloaded relationships (no pagination)
-	if err := query.Preload("ProductDetails.Product").
-		Preload("UserDetails.User.UserRoles.Role").
-		Preload("UserDetails.User.UserRoles.Assigner").
+	// Get all return records with available preloaded relationships only
+	if err := query.
 		Preload("Channel").
 		Preload("Store").
-		Preload("Creator.UserRoles.Role").
-		Preload("Creator.UserRoles.Assigner").
 		Order("id DESC").
 		Find(&returns).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve return reports", err.Error())
