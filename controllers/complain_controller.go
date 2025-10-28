@@ -520,8 +520,13 @@ func (cc *ComplainController) UpdateCheckComplain(c *gin.Context) {
 		return
 	}
 
+	if req.Checked == nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Validation failed", "checked field is required")
+		return
+	}
+
 	// Update complain checked status
-	complain.Checked = req.Checked
+	complain.Checked = *req.Checked
 
 	if err := cc.DB.Save(&complain).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update complain check status", err.Error())
@@ -577,5 +582,5 @@ type ComplainUserDetailRequest struct {
 }
 
 type UpdateCheckComplainRequest struct {
-	Checked bool `json:"checked" binding:"required"`
+	Checked *bool `json:"checked" binding:"required"`
 }
