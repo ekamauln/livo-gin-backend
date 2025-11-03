@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -362,6 +363,65 @@ func (oc *OutboundController) CreateOutbound(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Outbound created successfully", outbound.ToOutboundResponse())
 }
 
+// GetChartOutbounds godoc
+// @Summary Get outbound counts per day for current month
+// @Description Get daily count of outbounds for current month (for chart data, logged-in users only)
+// @Tags outbounds
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=OutboundsDailyCountResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/outbounds/chart [get]
+func (oc *OutboundController) GetChartOutbounds(c *gin.Context) {
+	// Get current month start and end dates
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	// First day of current month
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+
+	// First day of next month at 00:00:00 (to use as upper bound)
+	firstOfNextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Query to get daily counts for current month
+	var dailyCounts []OutboundsDailyCount
+
+	if err := oc.DB.Model(&models.Outbound{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&dailyCounts).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve outbound counts", err.Error())
+		return
+	}
+
+	// Get total count for current month
+	var totalCount int64
+	if err := oc.DB.Model(&models.Outbound{}).
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Count(&totalCount).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count outbounds", err.Error())
+		return
+	}
+
+	response := OutboundsDailyCountResponse{
+		Month:       currentMonth.String(),
+		Year:        currentYear,
+		DailyCounts: dailyCounts,
+		TotalCount:  int(totalCount),
+	}
+
+	message := "Outbound daily counts for " + currentMonth.String() + " " + strconv.Itoa(currentYear) + " retrieved successfully"
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
 // Request/Response structs
 type OutboundsListResponse struct {
 	Outbounds  []models.OutboundResponse `json:"outbounds"`
@@ -379,4 +439,18 @@ type CreateOutboundRequest struct {
 	Expedition      string `json:"expedition"`
 	ExpeditionColor string `json:"expedition_color"`
 	ExpeditionSlug  string `json:"expedition_slug"`
+}
+
+// OutboundsDailyCount represents the count of outbounds for a specific date
+type OutboundsDailyCount struct {
+	Date  time.Time `json:"date"`
+	Count int64     `json:"count"`
+}
+
+// OutboundsDailyCountResponse represents the response for daily outbound counts
+type OutboundsDailyCountResponse struct {
+	Month       string                `json:"month"` // e.g., "November"
+	Year        int                   `json:"year"`  // e.g., 2023
+	DailyCounts []OutboundsDailyCount `json:"daily_counts"`
+	TotalCount  int                   `json:"total_count"` // Total for the month
 }

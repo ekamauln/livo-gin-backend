@@ -4485,6 +4485,58 @@
                 }
             }
         },
+        "/api/outbounds/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of outbounds for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outbounds"
+                ],
+                "summary": "Get outbound counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.OutboundsDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/outbounds/{id}": {
             "get": {
                 "security": [
@@ -8011,6 +8063,40 @@
                     }
                 },
                 "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controllers.OutboundsDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.OutboundsDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.OutboundsDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2023",
                     "type": "integer"
                 }
             }
