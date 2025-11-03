@@ -15,8 +15,9 @@ func SetupQcRibbonRoutes(api *gin.RouterGroup, cfg *config.Config, qcRibbonContr
 	qcRibbon.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public qc-ribbon routes
-		qcRibbon.POST("", qcRibbonController.CreateQcRibbon) // Create new qc-ribbon
-		qcRibbon.GET("", qcRibbonController.GetQcRibbons)    // Get all qc-ribbons (with optional search and date filtering)
-		qcRibbon.GET("/:id", qcRibbonController.GetQcRibbon) // Get qc-ribbon by ID
+		qcRibbon.POST("", qcRibbonController.CreateQcRibbon)         // Create new qc-ribbon
+		qcRibbon.GET("", qcRibbonController.GetQcRibbons)            // Get all qc-ribbons (with optional search and date filtering)
+		qcRibbon.GET("/:id", qcRibbonController.GetQcRibbon)         // Get qc-ribbon by ID
+		qcRibbon.GET("/chart", qcRibbonController.GetChartQcRibbons) // Get qc-ribbon counts per day for current month
 	}
 }

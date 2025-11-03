@@ -2810,6 +2810,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/mb-ribbons/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of mb-ribbons for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mb-ribbons"
+                ],
+                "summary": "Get mb-ribbon counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.MbRibbonsDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/mb-ribbons/{id}": {
             "get": {
                 "security": [
@@ -4837,6 +4895,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/pc-onlines/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of pc-onlines for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pc-onlines"
+                ],
+                "summary": "Get pc-online counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.PcOnlinesDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/pc-onlines/{id}": {
             "get": {
                 "security": [
@@ -5392,6 +5508,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/qc-onlines/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of qc-onlines for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "qc-onlines"
+                ],
+                "summary": "Get qc-online counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.QcOnlinesDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/qc-onlines/{id}": {
             "get": {
                 "security": [
@@ -5599,6 +5773,64 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/qc-ribbons/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of qc-ribbons for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "qc-ribbons"
+                ],
+                "summary": "Get qc-ribbon counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.QcRibbonsDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -7761,6 +7993,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.MbRibbonDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "Format: YYYY-MM-DD",
+                    "type": "string"
+                }
+            }
+        },
         "controllers.MbRibbonFlowInfo": {
             "type": "object",
             "properties": {
@@ -7769,6 +8013,29 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/controllers.RibbonUserFlowInfo"
+                }
+            }
+        },
+        "controllers.MbRibbonsDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.MbRibbonDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2025",
+                    "type": "integer"
                 }
             }
         },
@@ -8121,6 +8388,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.PcOnlineDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "Format: YYYY-MM-DD",
+                    "type": "string"
+                }
+            }
+        },
         "controllers.PcOnlineDetailRequest": {
             "type": "object",
             "required": [
@@ -8150,6 +8429,29 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.PcOnlinesDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.PcOnlineDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2025",
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.PcOnlinesListResponse": {
             "type": "object",
             "properties": {
@@ -8175,6 +8477,18 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.ProductResponse"
                     }
+                }
+            }
+        },
+        "controllers.QcOnlineDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "Format: YYYY-MM-DD",
+                    "type": "string"
                 }
             }
         },
@@ -8207,6 +8521,29 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.QcOnlinesDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.QcOnlineDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2025",
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.QcOnlinesListResponse": {
             "type": "object",
             "properties": {
@@ -8218,6 +8555,18 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.QcOnlineResponse"
                     }
+                }
+            }
+        },
+        "controllers.QcRibbonDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "Format: YYYY-MM-DD",
+                    "type": "string"
                 }
             }
         },
@@ -8247,6 +8596,29 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/controllers.RibbonUserFlowInfo"
+                }
+            }
+        },
+        "controllers.QcRibbonsDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.QcRibbonDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2025",
+                    "type": "integer"
                 }
             }
         },

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -205,14 +206,24 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 		return
 	}
 
-	// Check if tracking exists if mb-onlines table first
+	// Check if tracking already exists in qc_onlines table
+	var existingQcOnline models.QcOnline
+	if err := qoc.DB.Where("tracking = ?", req.Tracking).First(&existingQcOnline).Error; err == nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "QC Online with this tracking already exists", "Duplicate tracking")
+		return
+	} else if err != gorm.ErrRecordNotFound {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to validate tracking", err.Error())
+		return
+	}
+
+	// Check if tracking exists in mb_onlines table
 	var mbOnline models.MbOnline
 	if err := qoc.DB.Where("tracking = ?", req.Tracking).First(&mbOnline).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			utils.ErrorResponse(c, http.StatusNotFound, "MB Online not found", "No MB online found with the specified tracking number")
+			utils.ErrorResponse(c, http.StatusNotFound, "MB Online not found", "No MB online found with the specified tracking number. Please create MB Online first.")
 			return
 		}
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to validate tracking", err.Error())
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to validate tracking in MB Online", err.Error())
 		return
 	}
 
@@ -240,13 +251,6 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 		}
 	}
 
-	// Check for duplicate tracking
-	var existingQcOnline models.QcOnline
-	if err := qoc.DB.Where("tracking = ?", req.Tracking).First(&existingQcOnline).Error; err == nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Qc-online with this tracking already exists", "Duplicate tracking")
-		return
-	}
-
 	// Start database transaction
 	tx := qoc.DB.Begin()
 	defer func() {
@@ -255,7 +259,7 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 		}
 	}()
 
-	// Create QC Ribbon
+	// Create QC Online
 	qcOnline := models.QcOnline{
 		Tracking: req.Tracking,
 		UserID:   &userIDUint,
@@ -302,6 +306,66 @@ func (qoc *QcOnlineController) CreateQcOnline(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Qc-online created successfully", qcOnline.ToQcOnlineResponse())
 }
 
+// GetChartQcOnlines godoc
+// @Summary Get qc-online counts per day for current month
+// @Description Get daily count of qc-onlines for current month (for chart data, logged-in users only)
+// @Tags qc-onlines
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=QcOnlinesDailyCountResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/qc-onlines/chart [get]
+func (qoc *QcOnlineController) GetChartQcOnlines(c *gin.Context) {
+	// Get current month start and end dates
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	// First day of current month at 00:00:00
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+
+	// First day of next month at 00:00:00 (to use as upper bound)
+	firstOfNextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Query to get daily counts for current month
+	var dailyCounts []QcOnlineDailyCount
+
+	if err := qoc.DB.Model(&models.QcOnline{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&dailyCounts).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve qc-online counts", err.Error())
+		return
+	}
+
+	// Get total count for current month
+	var totalCount int64
+	if err := qoc.DB.Model(&models.QcOnline{}).
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Count(&totalCount).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count qc-onlines", err.Error())
+		return
+	}
+
+	response := QcOnlinesDailyCountResponse{
+		Month:       currentMonth.String(),
+		Year:        currentYear,
+		DailyCounts: dailyCounts,
+		TotalCount:  int(totalCount),
+	}
+
+	message := "Qc-online daily counts for " + currentMonth.String() + " " + strconv.Itoa(currentYear) + " retrieved successfully"
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
 // Request/Response structs
 type QcOnlinesListResponse struct {
 	QcOnlines  []models.QcOnlineResponse `json:"qc_onlines"`
@@ -316,4 +380,18 @@ type QcOnlineDetailRequest struct {
 type CreateQcOnlineRequest struct {
 	Tracking string                  `json:"tracking" binding:"required" example:"TRK123456"`
 	Details  []QcOnlineDetailRequest `json:"details" binding:"required,dive,required"`
+}
+
+// QcOnlineDailyCount represents the count of qc-onlines for a specific date
+type QcOnlineDailyCount struct {
+	Date  string `json:"date"` // Format: YYYY-MM-DD
+	Count int    `json:"count"`
+}
+
+// QcOnlinesDailyCountResponse represents the response for daily qc-online counts
+type QcOnlinesDailyCountResponse struct {
+	Month       string               `json:"month"` // e.g., "November"
+	Year        int                  `json:"year"`  // e.g., 2025
+	DailyCounts []QcOnlineDailyCount `json:"daily_counts"`
+	TotalCount  int                  `json:"total_count"` // Total for the month
 }

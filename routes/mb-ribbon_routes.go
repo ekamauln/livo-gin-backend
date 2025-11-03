@@ -16,7 +16,8 @@ func SetupMbRibbonRoutes(api *gin.RouterGroup, cfg *config.Config, mbRibbonContr
 	{
 		// Public mb-ribbon routes
 		mbRibbon.POST("", mbRibbonController.CreateMbRibbon)
-		mbRibbon.GET("", mbRibbonController.GetMbRibbons)    // Get all mb-ribbons (with optional search and date filtering)
-		mbRibbon.GET("/:id", mbRibbonController.GetMbRibbon) // Get mb-ribbon by ID
+		mbRibbon.GET("", mbRibbonController.GetMbRibbons)            // Get all mb-ribbons (with optional search and date filtering)
+		mbRibbon.GET("/:id", mbRibbonController.GetMbRibbon)         // Get mb-ribbon by ID
+		mbRibbon.GET("/chart", mbRibbonController.GetChartMbRibbons) // Get mb-ribbon counts per day for current month
 	}
 }

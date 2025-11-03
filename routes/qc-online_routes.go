@@ -15,8 +15,9 @@ func SetupQcOnlineRoutes(api *gin.RouterGroup, cfg *config.Config, qcOnlineContr
 	qcOnline.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public qc-online routes
-		qcOnline.GET("", qcOnlineController.GetQcOnlines)    // Get all qc-onlines (with optional search and date filtering)
-		qcOnline.GET("/:id", qcOnlineController.GetQcOnline) // Get qc-online by ID
-		qcOnline.POST("", qcOnlineController.CreateQcOnline) // Create new qc-online
+		qcOnline.GET("", qcOnlineController.GetQcOnlines)            // Get all qc-onlines (with optional search and date filtering)
+		qcOnline.GET("/:id", qcOnlineController.GetQcOnline)         // Get qc-online by ID
+		qcOnline.POST("", qcOnlineController.CreateQcOnline)         // Create new qc-online
+		qcOnline.GET("/chart", qcOnlineController.GetChartQcOnlines) // Get qc-online counts per day for current month
 	}
 }

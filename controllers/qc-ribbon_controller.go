@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -303,6 +304,66 @@ func (qrc *QcRibbonController) CreateQcRibbon(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Qc-ribbon created successfully", qcRibbon.ToQcRibbonResponse())
 }
 
+// GetChartQcRibbons godoc
+// @Summary Get qc-ribbon counts per day for current month
+// @Description Get daily count of qc-ribbons for current month (for chart data, logged-in users only)
+// @Tags qc-ribbons
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=QcRibbonsDailyCountResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/qc-ribbons/chart [get]
+func (qrc *QcRibbonController) GetChartQcRibbons(c *gin.Context) {
+	// Get current month start and end dates
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	// First day of current month at 00:00:00
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+
+	// First day of next month at 00:00:00 (to use as upper bound)
+	firstOfNextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Query to get daily counts for current month
+	var dailyCounts []QcRibbonDailyCount
+
+	if err := qrc.DB.Model(&models.QcRibbon{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&dailyCounts).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve qc-ribbon counts", err.Error())
+		return
+	}
+
+	// Get total count for current month
+	var totalCount int64
+	if err := qrc.DB.Model(&models.QcRibbon{}).
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Count(&totalCount).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count qc-ribbons", err.Error())
+		return
+	}
+
+	response := QcRibbonsDailyCountResponse{
+		Month:       currentMonth.String(),
+		Year:        currentYear,
+		DailyCounts: dailyCounts,
+		TotalCount:  int(totalCount),
+	}
+
+	message := "Qc-ribbon daily counts for " + currentMonth.String() + " " + strconv.Itoa(currentYear) + " retrieved successfully"
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
 // Request/Response structs
 type QcRibbonsListResponse struct {
 	QcRibbons  []models.QcRibbonResponse `json:"qc_ribbons"`
@@ -317,4 +378,18 @@ type QcRibbonDetailRequest struct {
 type CreateQcRibbonRequest struct {
 	Tracking string                  `json:"tracking" binding:"required" example:"250925AASB6BSDJUI3C"`
 	Details  []QcRibbonDetailRequest `json:"details" binding:"required,dive,required"`
+}
+
+// QcRibbonDailyCount represents the count of qc-ribbons for a specific date
+type QcRibbonDailyCount struct {
+	Date  string `json:"date"` // Format: YYYY-MM-DD
+	Count int    `json:"count"`
+}
+
+// QcRibbonsDailyCountResponse represents the response for daily qc-ribbon counts
+type QcRibbonsDailyCountResponse struct {
+	Month       string               `json:"month"` // e.g., "November"
+	Year        int                  `json:"year"`  // e.g., 2025
+	DailyCounts []QcRibbonDailyCount `json:"daily_counts"`
+	TotalCount  int                  `json:"total_count"` // Total for the month
 }

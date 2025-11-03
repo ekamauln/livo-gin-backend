@@ -474,12 +474,36 @@ definitions:
       pagination:
         $ref: '#/definitions/utils.PaginationResponse'
     type: object
+  controllers.MbRibbonDailyCount:
+    properties:
+      count:
+        type: integer
+      date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
+    type: object
   controllers.MbRibbonFlowInfo:
     properties:
       created_at:
         type: string
       user:
         $ref: '#/definitions/controllers.RibbonUserFlowInfo'
+    type: object
+  controllers.MbRibbonsDailyCountResponse:
+    properties:
+      daily_counts:
+        items:
+          $ref: '#/definitions/controllers.MbRibbonDailyCount'
+        type: array
+      month:
+        description: e.g., "November"
+        type: string
+      total_count:
+        description: Total for the month
+        type: integer
+      year:
+        description: e.g., 2025
+        type: integer
     type: object
   controllers.MbRibbonsListResponse:
     properties:
@@ -709,6 +733,14 @@ definitions:
       pagination:
         $ref: '#/definitions/utils.PaginationResponse'
     type: object
+  controllers.PcOnlineDailyCount:
+    properties:
+      count:
+        type: integer
+      date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
+    type: object
   controllers.PcOnlineDetailRequest:
     properties:
       box_id:
@@ -729,6 +761,22 @@ definitions:
       user:
         $ref: '#/definitions/controllers.OnlineUserFlowInfo'
     type: object
+  controllers.PcOnlinesDailyCountResponse:
+    properties:
+      daily_counts:
+        items:
+          $ref: '#/definitions/controllers.PcOnlineDailyCount'
+        type: array
+      month:
+        description: e.g., "November"
+        type: string
+      total_count:
+        description: Total for the month
+        type: integer
+      year:
+        description: e.g., 2025
+        type: integer
+    type: object
   controllers.PcOnlinesListResponse:
     properties:
       pagination:
@@ -746,6 +794,14 @@ definitions:
         items:
           $ref: '#/definitions/models.ProductResponse'
         type: array
+    type: object
+  controllers.QcOnlineDailyCount:
+    properties:
+      count:
+        type: integer
+      date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
     type: object
   controllers.QcOnlineDetailRequest:
     properties:
@@ -767,6 +823,22 @@ definitions:
       user:
         $ref: '#/definitions/controllers.OnlineUserFlowInfo'
     type: object
+  controllers.QcOnlinesDailyCountResponse:
+    properties:
+      daily_counts:
+        items:
+          $ref: '#/definitions/controllers.QcOnlineDailyCount'
+        type: array
+      month:
+        description: e.g., "November"
+        type: string
+      total_count:
+        description: Total for the month
+        type: integer
+      year:
+        description: e.g., 2025
+        type: integer
+    type: object
   controllers.QcOnlinesListResponse:
     properties:
       pagination:
@@ -775,6 +847,14 @@ definitions:
         items:
           $ref: '#/definitions/models.QcOnlineResponse'
         type: array
+    type: object
+  controllers.QcRibbonDailyCount:
+    properties:
+      count:
+        type: integer
+      date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
     type: object
   controllers.QcRibbonDetailRequest:
     properties:
@@ -795,6 +875,22 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/controllers.RibbonUserFlowInfo'
+    type: object
+  controllers.QcRibbonsDailyCountResponse:
+    properties:
+      daily_counts:
+        items:
+          $ref: '#/definitions/controllers.QcRibbonDailyCount'
+        type: array
+      month:
+        description: e.g., "November"
+        type: string
+      total_count:
+        description: Total for the month
+        type: integer
+      year:
+        description: e.g., 2025
+        type: integer
     type: object
   controllers.QcRibbonsListResponse:
     properties:
@@ -3488,6 +3584,41 @@ paths:
       summary: Get a specific mb-ribbon by ID
       tags:
       - mb-ribbons
+  /api/mb-ribbons/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get daily count of mb-ribbons for current month (for chart data,
+        logged-in users only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.MbRibbonsDailyCountResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get mb-ribbon counts per day for current month
+      tags:
+      - mb-ribbons
   /api/mobile/orders:
     get:
       consumes:
@@ -4729,6 +4860,41 @@ paths:
       summary: Get a specific pc-online by ID
       tags:
       - pc-onlines
+  /api/pc-onlines/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get daily count of pc-onlines for current month (for chart data,
+        logged-in users only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.PcOnlinesDailyCountResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get pc-online counts per day for current month
+      tags:
+      - pc-onlines
   /api/products:
     get:
       consumes:
@@ -5069,6 +5235,41 @@ paths:
       summary: Get a specific qc-online by ID
       tags:
       - qc-onlines
+  /api/qc-onlines/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get daily count of qc-onlines for current month (for chart data,
+        logged-in users only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.QcOnlinesDailyCountResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get qc-online counts per day for current month
+      tags:
+      - qc-onlines
   /api/qc-ribbons:
     get:
       consumes:
@@ -5198,6 +5399,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a specific qc-ribbon by ID
+      tags:
+      - qc-ribbons
+  /api/qc-ribbons/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get daily count of qc-ribbons for current month (for chart data,
+        logged-in users only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.QcRibbonsDailyCountResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get qc-ribbon counts per day for current month
       tags:
       - qc-ribbons
   /api/reports/boxes-count:

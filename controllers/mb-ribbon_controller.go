@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -238,6 +239,66 @@ func (mrc *MbRibbonController) CreateMbRibbon(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Mb-ribbon created successfully", mbRibbon.ToMbRibbonResponse())
 }
 
+// GetChartMbRibbons godoc
+// @Summary Get mb-ribbon counts per day for current month
+// @Description Get daily count of mb-ribbons for current month (for chart data, logged-in users only)
+// @Tags mb-ribbons
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=MbRibbonsDailyCountResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/mb-ribbons/chart [get]
+func (mrc *MbRibbonController) GetChartMbRibbons(c *gin.Context) {
+	// Get current month start and end dates
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	// First day of current month at 00:00:00
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+
+	// First day of next month at 00:00:00 (to use as upper bound)
+	firstOfNextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Query to get daily counts for current month
+	var dailyCounts []MbRibbonDailyCount
+
+	if err := mrc.DB.Model(&models.MbRibbon{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&dailyCounts).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve mb-ribbon counts", err.Error())
+		return
+	}
+
+	// Get total count for current month
+	var totalCount int64
+	if err := mrc.DB.Model(&models.MbRibbon{}).
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Count(&totalCount).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count mb-ribbons", err.Error())
+		return
+	}
+
+	response := MbRibbonsDailyCountResponse{
+		Month:       currentMonth.String(),
+		Year:        currentYear,
+		DailyCounts: dailyCounts,
+		TotalCount:  int(totalCount),
+	}
+
+	message := "Mb-ribbon daily counts for " + currentMonth.String() + " " + strconv.Itoa(currentYear) + " retrieved successfully"
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
 // Request/Response structs
 type MbRibbonsListResponse struct {
 	MbRibbons  []models.MbRibbonResponse `json:"mb_ribbons"`
@@ -246,4 +307,18 @@ type MbRibbonsListResponse struct {
 
 type CreateMbRibbonRequest struct {
 	Tracking string `json:"tracking" binding:"required" example:"JNE1234567890"`
+}
+
+// MbRibbonsDailyCount represents the count of mb-ribbons for a specific date
+type MbRibbonDailyCount struct {
+	Date  string `json:"date"` // Format: YYYY-MM-DD
+	Count int    `json:"count"`
+}
+
+// MbRibbonsDailyCountResponse represents the response for daily mb-ribbons counts
+type MbRibbonsDailyCountResponse struct {
+	Month       string               `json:"month"` // e.g., "November"
+	Year        int                  `json:"year"`  // e.g., 2025
+	DailyCounts []MbRibbonDailyCount `json:"daily_counts"`
+	TotalCount  int                  `json:"total_count"` // Total for the month
 }

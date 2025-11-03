@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -338,6 +339,66 @@ func (pc *PcOnlineController) CreatePcOnline(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusCreated, "Pc-online created successfully", pcOnline.ToPcOnlineResponse())
 }
 
+// GetChartPcOnlines godoc
+// @Summary Get pc-online counts per day for current month
+// @Description Get daily count of pc-onlines for current month (for chart data, logged-in users only)
+// @Tags pc-onlines
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=PcOnlinesDailyCountResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Router /api/pc-onlines/chart [get]
+func (pc *PcOnlineController) GetChartPcOnlines(c *gin.Context) {
+	// Get current month start and end dates
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	// First day of current month at 00:00:00
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+
+	// First day of next month at 00:00:00 (to use as upper bound)
+	firstOfNextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Query to get daily counts for current month
+	var dailyCounts []PcOnlineDailyCount
+
+	if err := pc.DB.Model(&models.PcOnline{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&dailyCounts).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve pc-online counts", err.Error())
+		return
+	}
+
+	// Get total count for current month
+	var totalCount int64
+	if err := pc.DB.Model(&models.PcOnline{}).
+		Where("created_at >= ?", firstOfMonth).
+		Where("created_at < ?", firstOfNextMonth).
+		Count(&totalCount).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count pc-onlines", err.Error())
+		return
+	}
+
+	response := PcOnlinesDailyCountResponse{
+		Month:       currentMonth.String(),
+		Year:        currentYear,
+		DailyCounts: dailyCounts,
+		TotalCount:  int(totalCount),
+	}
+
+	message := "Pc-online daily counts for " + currentMonth.String() + " " + strconv.Itoa(currentYear) + " retrieved successfully"
+
+	utils.SuccessResponse(c, http.StatusOK, message, response)
+}
+
 // Request/Response structs
 type PcOnlinesListResponse struct {
 	PcOnlines  []models.PcOnlineResponse `json:"pc_onlines"`
@@ -352,4 +413,18 @@ type PcOnlineDetailRequest struct {
 type CreatePcOnlineRequest struct {
 	Tracking string                  `json:"tracking" binding:"required" example:"TRK123456"`
 	Details  []PcOnlineDetailRequest `json:"details" binding:"required,dive,required"`
+}
+
+// PcOnlineDailyCount represents the count of pc-onlines for a specific date
+type PcOnlineDailyCount struct {
+	Date  string `json:"date"` // Format: YYYY-MM-DD
+	Count int    `json:"count"`
+}
+
+// PcOnlinesDailyCountResponse represents the response for daily pc-online counts
+type PcOnlinesDailyCountResponse struct {
+	Month       string               `json:"month"` // e.g., "November"
+	Year        int                  `json:"year"`  // e.g., 2025
+	DailyCounts []PcOnlineDailyCount `json:"daily_counts"`
+	TotalCount  int                  `json:"total_count"` // Total for the month
 }

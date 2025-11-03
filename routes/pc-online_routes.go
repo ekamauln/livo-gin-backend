@@ -15,8 +15,9 @@ func SetupPcOnlineRoutes(api *gin.RouterGroup, cfg *config.Config, pcOnlineContr
 	pcOnline.Use(middleware.AuthMiddleware(cfg))
 	{
 		// Public pc-online routes
-		pcOnline.GET("", pcOnlineController.GetPcOnlines)    // Get all pc-onlines (with optional search and date filtering)
-		pcOnline.GET("/:id", pcOnlineController.GetPcOnline) // Get pc-online by ID
-		pcOnline.POST("", pcOnlineController.CreatePcOnline) // Create new pc-online
+		pcOnline.GET("", pcOnlineController.GetPcOnlines)            // Get all pc-onlines (with optional search and date filtering)
+		pcOnline.GET("/:id", pcOnlineController.GetPcOnline)         // Get pc-online by ID
+		pcOnline.POST("", pcOnlineController.CreatePcOnline)         // Create new pc-online
+		pcOnline.GET("/chart", pcOnlineController.GetChartPcOnlines) // Get pc-online counts per day for current month
 	}
 }
