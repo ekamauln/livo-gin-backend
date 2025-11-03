@@ -16,6 +16,11 @@ definitions:
         type: integer
       box_name:
         type: string
+      details:
+        description: Added gorm:"-" to ignore this field
+        items:
+          $ref: '#/definitions/controllers.BoxUsageDetail'
+        type: array
       online_count:
         type: integer
       ribbon_count:
@@ -31,6 +36,22 @@ definitions:
         items:
           $ref: '#/definitions/controllers.BoxCountReport'
         type: array
+    type: object
+  controllers.BoxUsageDetail:
+    properties:
+      box_name:
+        type: string
+      created_at:
+        type: string
+      order_id:
+        type: string
+      quantity:
+        type: integer
+      source:
+        description: '"QC Ribbon" or "QC Online"'
+        type: string
+      tracking:
+        type: string
     type: object
   controllers.BoxesListResponse:
     properties:

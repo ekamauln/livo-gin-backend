@@ -7322,6 +7322,13 @@ const docTemplate = `{
                 "box_name": {
                     "type": "string"
                 },
+                "details": {
+                    "description": "Added gorm:\"-\" to ignore this field",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.BoxUsageDetail"
+                    }
+                },
                 "online_count": {
                     "type": "integer"
                 },
@@ -7344,6 +7351,30 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/controllers.BoxCountReport"
                     }
+                }
+            }
+        },
+        "controllers.BoxUsageDetail": {
+            "type": "object",
+            "properties": {
+                "box_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "source": {
+                    "description": "\"QC Ribbon\" or \"QC Online\"",
+                    "type": "string"
+                },
+                "tracking": {
+                    "type": "string"
                 }
             }
         },

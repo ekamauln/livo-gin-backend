@@ -170,6 +170,80 @@ func (rc *ReportController) GetBoxReports(c *gin.Context) {
 		return
 	}
 
+	// For each box report, get the detailed breakdown
+	for i := range reports {
+		// Build date filter for details query
+		detailDateFilter := "qc_ribbon_details.deleted_at IS NULL" // Specify table name
+		if startDate != "" {
+			detailDateFilter += fmt.Sprintf(" AND qc_ribbon_details.created_at >= '%s 00:00:00'", startDate)
+		}
+		if endDate != "" {
+			parsedEndDate, _ := time.Parse("2006-01-02", endDate)
+			nextDay := parsedEndDate.AddDate(0, 0, 1).Format("2006-01-02 00:00:00")
+			detailDateFilter += fmt.Sprintf(" AND qc_ribbon_details.created_at < '%s'", nextDay)
+		}
+
+		// Get QC Ribbon details - JOIN with orders table to get order_ginee_id
+		var ribbonDetails []BoxUsageDetail
+		ribbonQuery := rc.DB.Table("qc_ribbon_details").
+			Select(`
+				qc_ribbons.tracking,
+				COALESCE(orders.order_ginee_id, '') as order_id,
+				boxes.name as box_name,
+				qc_ribbon_details.quantity,
+				qc_ribbon_details.created_at,
+				'QC Ribbon' as source
+			`).
+			Joins("INNER JOIN qc_ribbons ON qc_ribbons.id = qc_ribbon_details.qc_ribbon_id AND qc_ribbons.deleted_at IS NULL").
+			Joins("INNER JOIN boxes ON boxes.id = qc_ribbon_details.box_id AND boxes.deleted_at IS NULL").
+			Joins("LEFT JOIN orders ON orders.tracking = qc_ribbons.tracking AND orders.deleted_at IS NULL").
+			Where("qc_ribbon_details.box_id = ?", reports[i].BoxID).
+			Where(detailDateFilter).
+			Order("qc_ribbon_details.created_at DESC")
+
+		if err := ribbonQuery.Scan(&ribbonDetails).Error; err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve ribbon details", err.Error())
+			return
+		}
+
+		// Build date filter for online details
+		onlineDetailDateFilter := "qc_online_details.deleted_at IS NULL" // Specify table name
+		if startDate != "" {
+			onlineDetailDateFilter += fmt.Sprintf(" AND qc_online_details.created_at >= '%s 00:00:00'", startDate)
+		}
+		if endDate != "" {
+			parsedEndDate, _ := time.Parse("2006-01-02", endDate)
+			nextDay := parsedEndDate.AddDate(0, 0, 1).Format("2006-01-02 00:00:00")
+			onlineDetailDateFilter += fmt.Sprintf(" AND qc_online_details.created_at < '%s'", nextDay)
+		}
+
+		// Get QC Online details - JOIN with orders table to get order_ginee_id
+		var onlineDetails []BoxUsageDetail
+		onlineQuery := rc.DB.Table("qc_online_details").
+			Select(`
+				qc_onlines.tracking,
+				COALESCE(orders.order_ginee_id, '') as order_id,
+				boxes.name as box_name,
+				qc_online_details.quantity,
+				qc_online_details.created_at,
+				'QC Online' as source
+			`).
+			Joins("INNER JOIN qc_onlines ON qc_onlines.id = qc_online_details.qc_online_id AND qc_onlines.deleted_at IS NULL").
+			Joins("INNER JOIN boxes ON boxes.id = qc_online_details.box_id AND boxes.deleted_at IS NULL").
+			Joins("LEFT JOIN orders ON orders.tracking = qc_onlines.tracking AND orders.deleted_at IS NULL").
+			Where("qc_online_details.box_id = ?", reports[i].BoxID).
+			Where(onlineDetailDateFilter).
+			Order("qc_online_details.created_at DESC")
+
+		if err := onlineQuery.Scan(&onlineDetails).Error; err != nil {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to retrieve online details", err.Error())
+			return
+		}
+
+		// Combine ribbon and online details
+		reports[i].Details = append(ribbonDetails, onlineDetails...)
+	}
+
 	response := BoxCountReportsListResponse{
 		Reports: reports,
 		Pagination: utils.PaginationResponse{
@@ -665,14 +739,25 @@ func (rc *ReportController) GetUserFeeReports(c *gin.Context) {
 }
 
 // Request/Response structs
+// BoxUsageDetail represents individual box usage record
+type BoxUsageDetail struct {
+	Tracking  string    `json:"tracking"`
+	OrderID   string    `json:"order_id"`
+	BoxName   string    `json:"box_name"`
+	Quantity  int       `json:"quantity"`
+	CreatedAt time.Time `json:"created_at"`
+	Source    string    `json:"source"` // "QC Ribbon" or "QC Online"
+}
+
 // BoxCountReport represents box count report
 type BoxCountReport struct {
-	BoxID       uint   `json:"box_id"`
-	BoxCode     string `json:"box_code"`
-	BoxName     string `json:"box_name"`
-	TotalCount  int    `json:"total_count"`
-	RibbonCount int    `json:"ribbon_count"`
-	OnlineCount int    `json:"online_count"`
+	BoxID       uint             `json:"box_id"`
+	BoxCode     string           `json:"box_code"`
+	BoxName     string           `json:"box_name"`
+	TotalCount  int              `json:"total_count"`
+	RibbonCount int              `json:"ribbon_count"`
+	OnlineCount int              `json:"online_count"`
+	Details     []BoxUsageDetail `json:"details" gorm:"-"` // Added gorm:"-" to ignore this field
 }
 
 // BoxCountReportsListResponse represents the response for box count reports
