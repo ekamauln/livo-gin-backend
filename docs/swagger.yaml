@@ -434,12 +434,36 @@ definitions:
       user:
         $ref: '#/definitions/models.UserResponse'
     type: object
+  controllers.MbOnlineDailyCount:
+    properties:
+      count:
+        type: integer
+      date:
+        description: 'Format: YYYY-MM-DD'
+        type: string
+    type: object
   controllers.MbOnlineFlowInfo:
     properties:
       created_at:
         type: string
       user:
         $ref: '#/definitions/controllers.OnlineUserFlowInfo'
+    type: object
+  controllers.MbOnlinesDailyCountResponse:
+    properties:
+      daily_counts:
+        items:
+          $ref: '#/definitions/controllers.MbOnlineDailyCount'
+        type: array
+      month:
+        description: e.g., "November"
+        type: string
+      total_count:
+        description: Total for the month
+        type: integer
+      year:
+        description: e.g., 2025
+        type: integer
     type: object
   controllers.MbOnlinesListResponse:
     properties:
@@ -3274,6 +3298,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a specific mb-online by ID
+      tags:
+      - mb-onlines
+  /api/mb-onlines/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get daily count of mb-onlines for current month (for chart data,
+        logged-in users only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.MbOnlinesDailyCountResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get mb-online counts per day for current month
       tags:
       - mb-onlines
   /api/mb-ribbons:

@@ -2538,6 +2538,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/mb-onlines/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get daily count of mb-onlines for current month (for chart data, logged-in users only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mb-onlines"
+                ],
+                "summary": "Get mb-online counts per day for current month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.MbOnlinesDailyCountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/mb-onlines/{id}": {
             "get": {
                 "security": [
@@ -7591,6 +7649,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.MbOnlineDailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "Format: YYYY-MM-DD",
+                    "type": "string"
+                }
+            }
+        },
         "controllers.MbOnlineFlowInfo": {
             "type": "object",
             "properties": {
@@ -7599,6 +7669,29 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/controllers.OnlineUserFlowInfo"
+                }
+            }
+        },
+        "controllers.MbOnlinesDailyCountResponse": {
+            "type": "object",
+            "properties": {
+                "daily_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.MbOnlineDailyCount"
+                    }
+                },
+                "month": {
+                    "description": "e.g., \"November\"",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total for the month",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2025",
+                    "type": "integer"
                 }
             }
         },
