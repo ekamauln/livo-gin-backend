@@ -7363,6 +7363,10 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "full_name": {
+                    "description": "Added full name",
+                    "type": "string"
+                },
                 "order_id": {
                     "type": "string"
                 },
@@ -7374,6 +7378,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tracking": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "Added user ID",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "Added username",
                     "type": "string"
                 }
             }

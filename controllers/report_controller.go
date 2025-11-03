@@ -183,7 +183,7 @@ func (rc *ReportController) GetBoxReports(c *gin.Context) {
 			detailDateFilter += fmt.Sprintf(" AND qc_ribbon_details.created_at < '%s'", nextDay)
 		}
 
-		// Get QC Ribbon details - JOIN with orders table to get order_ginee_id
+		// Get QC Ribbon details - JOIN with orders and users table
 		var ribbonDetails []BoxUsageDetail
 		ribbonQuery := rc.DB.Table("qc_ribbon_details").
 			Select(`
@@ -191,12 +191,16 @@ func (rc *ReportController) GetBoxReports(c *gin.Context) {
 				COALESCE(orders.order_ginee_id, '') as order_id,
 				boxes.name as box_name,
 				qc_ribbon_details.quantity,
+				COALESCE(qc_ribbons.user_id, 0) as user_id,
+				COALESCE(users.username, '') as username,
+				COALESCE(users.full_name, '') as full_name,
 				qc_ribbon_details.created_at,
 				'QC Ribbon' as source
 			`).
 			Joins("INNER JOIN qc_ribbons ON qc_ribbons.id = qc_ribbon_details.qc_ribbon_id AND qc_ribbons.deleted_at IS NULL").
 			Joins("INNER JOIN boxes ON boxes.id = qc_ribbon_details.box_id AND boxes.deleted_at IS NULL").
 			Joins("LEFT JOIN orders ON orders.tracking = qc_ribbons.tracking AND orders.deleted_at IS NULL").
+			Joins("LEFT JOIN users ON users.id = qc_ribbons.user_id AND users.deleted_at IS NULL").
 			Where("qc_ribbon_details.box_id = ?", reports[i].BoxID).
 			Where(detailDateFilter).
 			Order("qc_ribbon_details.created_at DESC")
@@ -217,7 +221,7 @@ func (rc *ReportController) GetBoxReports(c *gin.Context) {
 			onlineDetailDateFilter += fmt.Sprintf(" AND qc_online_details.created_at < '%s'", nextDay)
 		}
 
-		// Get QC Online details - JOIN with orders table to get order_ginee_id
+		// Get QC Online details - JOIN with orders and users table
 		var onlineDetails []BoxUsageDetail
 		onlineQuery := rc.DB.Table("qc_online_details").
 			Select(`
@@ -225,12 +229,16 @@ func (rc *ReportController) GetBoxReports(c *gin.Context) {
 				COALESCE(orders.order_ginee_id, '') as order_id,
 				boxes.name as box_name,
 				qc_online_details.quantity,
+				COALESCE(qc_onlines.user_id, 0) as user_id,
+				COALESCE(users.username, '') as username,
+				COALESCE(users.full_name, '') as full_name,
 				qc_online_details.created_at,
 				'QC Online' as source
 			`).
 			Joins("INNER JOIN qc_onlines ON qc_onlines.id = qc_online_details.qc_online_id AND qc_onlines.deleted_at IS NULL").
 			Joins("INNER JOIN boxes ON boxes.id = qc_online_details.box_id AND boxes.deleted_at IS NULL").
 			Joins("LEFT JOIN orders ON orders.tracking = qc_onlines.tracking AND orders.deleted_at IS NULL").
+			Joins("LEFT JOIN users ON users.id = qc_onlines.user_id AND users.deleted_at IS NULL").
 			Where("qc_online_details.box_id = ?", reports[i].BoxID).
 			Where(onlineDetailDateFilter).
 			Order("qc_online_details.created_at DESC")
@@ -745,6 +753,9 @@ type BoxUsageDetail struct {
 	OrderID   string    `json:"order_id"`
 	BoxName   string    `json:"box_name"`
 	Quantity  int       `json:"quantity"`
+	UserID    uint      `json:"user_id"`       // Added user ID
+	Username  string    `json:"username"`      // Added username
+	FullName  string    `json:"full_name"`     // Added full name
 	CreatedAt time.Time `json:"created_at"`
 	Source    string    `json:"source"` // "QC Ribbon" or "QC Online"
 }

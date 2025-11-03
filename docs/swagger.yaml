@@ -43,6 +43,9 @@ definitions:
         type: string
       created_at:
         type: string
+      full_name:
+        description: Added full name
+        type: string
       order_id:
         type: string
       quantity:
@@ -51,6 +54,12 @@ definitions:
         description: '"QC Ribbon" or "QC Online"'
         type: string
       tracking:
+        type: string
+      user_id:
+        description: Added user ID
+        type: integer
+      username:
+        description: Added username
         type: string
     type: object
   controllers.BoxesListResponse:
