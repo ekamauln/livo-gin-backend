@@ -128,34 +128,38 @@ func seedDefaultStores(db *gorm.DB) {
 func seedDefaultExpeditions(db *gorm.DB) {
 	expeditions := []models.Expedition{
 		{Code: "TKP0", Name: "JNE/ID-Express", Slug: "jne-id-express", Color: "#006072"}, // JNE/ID Express
+		{Code: "PJ", Name: "Offline", Slug: "offline", Color: "#000000"},                 // Offline
 		{Code: "INS", Name: "Instant", Slug: "instant", Color: "#00d0dd"},                // Instant
+		{Code: "BLMP", Name: "Paxel", Slug: "paxel", Color: "#5f50a0"},                   // Paxel
 		{Code: "LX", Name: "LEX", Slug: "lex", Color: "#0c5eb4"},                         // LEX
 		{Code: "NL", Name: "LEX", Slug: "lex", Color: "#0c5eb4"},                         // LEX
 		{Code: "JN", Name: "LEX", Slug: "lex", Color: "#0c5eb4"},                         // LEX
 		{Code: "JZ", Name: "LEX", Slug: "lex", Color: "#0c5eb4"},                         // LEX
 		{Code: "SP", Name: "SPX", Slug: "spx", Color: "#ff7300"},                         // SPX
+		{Code: "ID2", Name: "SPX", Slug: "spx", Color: "#ff7300"},                        // SPX
 		{Code: "TSA", Name: "AnterAja", Slug: "anteraja", Color: "#ff007a"},              // AnterAja
 		{Code: "1100", Name: "AnterAja", Slug: "anteraja", Color: "#ff007a"},             // AnterAja
 		{Code: "TAA", Name: "AnterAja", Slug: "anteraja", Color: "#ff007a"},              // AnterAja
 		{Code: "TLJX", Name: "JNE", Slug: "jne", Color: "#032078"},                       // JNE
-		{Code: "4107", Name: "JNE", Slug: "jne", Color: "#032078"},                       // JNE
+		{Code: "41", Name: "JNE", Slug: "jne", Color: "#032078"},                         // JNE
 		{Code: "CM", Name: "JNE", Slug: "jne", Color: "#032078"},                         // JNE
 		{Code: "BLIJ", Name: "JNE", Slug: "jne", Color: "#032078"},                       // JNE
-		{Code: "411", Name: "JNE", Slug: "jne", Color: "#032078"},                        // JNE
 		{Code: "JT", Name: "JNE", Slug: "jne", Color: "#032078"},                         // JNE
 		{Code: "TG", Name: "JNE", Slug: "jne", Color: "#032078"},                         // JNE
 		{Code: "TLJR", Name: "JNE", Slug: "jne", Color: "#032078"},                       // JNE
 		{Code: "TLJC", Name: "JNE", Slug: "jne", Color: "#032078"},                       // JNE
 		{Code: "JNE", Name: "JNE", Slug: "jne", Color: "#032078"},                        // JNE
+		{Code: "JO", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "JD", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "JJ", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "JB", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "JP", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "JX", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},         // J&T Express
 		{Code: "TKJN", Name: "J&T Express", Slug: "j&t-express", Color: "#ff0000"},       // J&T Express
-		{Code: "ID", Name: "ID Express", Slug: "id-express", Color: "#b30000"},           // ID Express
+		{Code: "IDS", Name: "ID Express", Slug: "id-express", Color: "#b30000"},          // ID Express
 		{Code: "TKP8", Name: "ID Express", Slug: "id-express", Color: "#b30000"},         // ID Express
 		{Code: "300", Name: "J&T Cargo", Slug: "j&t-cargo", Color: "#008601"},            // J&T Cargo
+		{Code: "2012", Name: "J&T Cargo", Slug: "j&t-cargo", Color: "#008601"},           // J&T Cargo
 		{Code: "2011", Name: "J&T Cargo", Slug: "j&t-cargo", Color: "#008601"},           // J&T Cargo
 		{Code: "2010", Name: "J&T Cargo", Slug: "j&t-cargo", Color: "#008601"},           // J&T Cargo
 		{Code: "2009", Name: "J&T Cargo", Slug: "j&t-cargo", Color: "#008601"},           // J&T Cargo
