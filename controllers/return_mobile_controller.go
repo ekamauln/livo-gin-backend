@@ -61,8 +61,8 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 		return
 	}
 
-	// Get return mobiles with pagination, search filter, date filter, and order by ID descending
-	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&returnMobiles).Error; err != nil {
+	// Get return mobiles with pagination, search filter, date filter, preload relationships, and order by ID descending
+	if err := query.Preload("Channel").Preload("Store").Order("id DESC").Limit(limit).Offset(offset).Find(&returnMobiles).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch return mobiles", err.Error())
 		return
 	}
@@ -106,7 +106,7 @@ func (rmc *ReturnMobileController) GetReturnMobile(c *gin.Context) {
 	returnMobileID := c.Param("id")
 
 	var returnMobile models.Return
-	if err := rmc.DB.First(&returnMobile, returnMobileID).Error; err != nil {
+	if err := rmc.DB.Preload("Channel").Preload("Store").First(&returnMobile, returnMobileID).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "Return not found", err.Error())
 		return
 	}
