@@ -22,17 +22,14 @@ func NewReturnMobileController(db *gorm.DB) *ReturnMobileController {
 
 // GetReturnMobiles godoc
 // @Summary Get all return mobiles
-// @Description Get list of all return mobiles (logged-in users only)
+// @Description Get list of all return mobiles (public access, no login required)
 // @Tags return-mobiles
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Param search query string false "Search by return mobile tracking (partial match)"
 // @Success 200 {object} utils.Response{data=ReturnMobilesListResponse}
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
 // @Router /api/mobile/returns [get]
 func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 	// Parse pagination parameters
@@ -92,16 +89,13 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 
 // GetReturnMobile godoc
 // @Summary Get a return mobile by ID
-// @Description Get a return mobile by ID (logged-in users only)
+// @Description Get a return mobile by ID (public access, no login required)
 // @Tags return-mobiles
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Param id path int true "Return Mobile ID"
 // @Success 200 {object} utils.Response{data=models.ReturnMobileResponse}
 // @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Router /api/mobile/returns/{id} [get]
 func (rmc *ReturnMobileController) GetReturnMobile(c *gin.Context) {
@@ -118,16 +112,13 @@ func (rmc *ReturnMobileController) GetReturnMobile(c *gin.Context) {
 
 // CreateReturnMobile godoc
 // @Summary Create a new return mobile
-// @Description Create a new return mobile (logged-in users only)
+// @Description Create a new return mobile (public access, no login required)
 // @Tags return-mobiles
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Param return_mobile body CreateReturnMobileRequest true "Create return mobile request"
 // @Success 201 {object} utils.Response{data=models.ReturnMobileResponse}
 // @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
 // @Router /api/mobile/returns [post]
 func (rmc *ReturnMobileController) CreateReturnMobile(c *gin.Context) {
 	var req CreateReturnMobileRequest

@@ -3352,12 +3352,7 @@ const docTemplate = `{
         },
         "/api/mobile/returns": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get list of all return mobiles (logged-in users only)",
+                "description": "Get list of all return mobiles (public access, no login required)",
                 "consumes": [
                     "application/json"
                 ],
@@ -3408,28 +3403,11 @@ const docTemplate = `{
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
                     }
                 }
             },
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new return mobile (logged-in users only)",
+                "description": "Create a new return mobile (public access, no login required)",
                 "consumes": [
                     "application/json"
                 ],
@@ -3475,30 +3453,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
                     }
                 }
             }
         },
         "/api/mobile/returns/{id}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a return mobile by ID (logged-in users only)",
+                "description": "Get a return mobile by ID (public access, no login required)",
                 "consumes": [
                     "application/json"
                 ],
@@ -3539,18 +3500,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }

@@ -183,7 +183,7 @@ func SetupRoutes(cfg *config.Config, authController *controllers.AuthController,
 	SetupOnlineFlowRoutes(api, cfg, onlineFlowController)
 	SetupRibbonFlowRoutes(api, cfg, ribbonFlowController)
 	SetupReturnRoutes(api, cfg, returnController)
-	SetupReturnMobileRoutes(api, cfg, returnMobileController)
+	SetupReturnMobileRoutes(api, returnMobileController)
 	SetupComplainRoutes(api, cfg, complainController)
 	SetupReportRoutes(api, cfg, reportController)
 

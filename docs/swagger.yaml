@@ -3907,7 +3907,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get list of all return mobiles (logged-in users only)
+      description: Get list of all return mobiles (public access, no login required)
       parameters:
       - default: 1
         description: Page number
@@ -3935,23 +3935,13 @@ paths:
                 data:
                   $ref: '#/definitions/controllers.ReturnMobilesListResponse'
               type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
       summary: Get all return mobiles
       tags:
       - return-mobiles
     post:
       consumes:
       - application/json
-      description: Create a new return mobile (logged-in users only)
+      description: Create a new return mobile (public access, no login required)
       parameters:
       - description: Create return mobile request
         in: body
@@ -3975,16 +3965,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
       summary: Create a new return mobile
       tags:
       - return-mobiles
@@ -3992,7 +3972,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get a return mobile by ID (logged-in users only)
+      description: Get a return mobile by ID (public access, no login required)
       parameters:
       - description: Return Mobile ID
         in: path
@@ -4015,20 +3995,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/utils.Response'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/utils.Response'
-      security:
-      - BearerAuth: []
       summary: Get a return mobile by ID
       tags:
       - return-mobiles
