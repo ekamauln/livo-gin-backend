@@ -269,6 +269,9 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 		return
 	}
 
+	// Convert old tracking to uppercase and trim spaces
+	req.OldTracking = strings.ToUpper(strings.TrimSpace(req.OldTracking))
+
 	// Check for duplicate old tracking if changed
 	if ret.OldTracking != req.OldTracking {
 		var existingReturn models.Return
@@ -276,6 +279,19 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
 			return
 		}
+	}
+
+	// Find order by old_tracking first (before transaction)
+	var order models.Order
+	if err := rc.DB.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		return
+	}
+
+	// Check if order has details
+	if len(order.OrderDetails) == 0 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Order has no details", "The order has no order details to copy")
+		return
 	}
 
 	// Start database transaction
@@ -290,42 +306,48 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 	ret.OldTracking = req.OldTracking
 	ret.ReturnType = req.ReturnType
 	ret.ReturnReason = req.ReturnReason
+	ret.OrderGineeID = order.OrderGineeID
 
-	// Find order by old_tracking and sync product details
-	var order models.Order
-	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
-		// Copy OrderGineeID from order to return
-		ret.OrderGineeID = order.OrderGineeID
+	// Clear existing return details (soft delete)
+	if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+		return
+	}
 
-		// Clear existing return details
-		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+	// Track products not found and created count
+	var productsNotFound []string
+	var createdCount int
+
+	// Create return details based on order details
+	for _, orderDetail := range order.OrderDetails {
+		// Find product by SKU from order detail
+		var product models.Product
+		if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err != nil {
+			// Track products not found
+			productsNotFound = append(productsNotFound, orderDetail.Sku)
+			continue
+		}
+
+		returnDetail := models.ReturnDetail{
+			ReturnID:  ret.ID,
+			ProductID: product.ID,
+			Quantity:  orderDetail.Quantity,
+		}
+
+		if err := tx.Create(&returnDetail).Error; err != nil {
 			tx.Rollback()
-			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
 			return
 		}
+		createdCount++
+	}
 
-		// Create return details based on order details
-		for _, orderDetail := range order.OrderDetails {
-			// Find product by SKU
-			var product models.Product
-			if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
-				returnDetail := models.ReturnDetail{
-					ReturnID:  ret.ID,
-					ProductID: product.ID,
-					Quantity:  orderDetail.Quantity,
-				}
-
-				if err := tx.Create(&returnDetail).Error; err != nil {
-					tx.Rollback()
-					utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
-					return
-				}
-			}
-		}
-	} else {
-		// If order not found, rollback transaction
+	// If no return details were created, return an error
+	if createdCount == 0 {
 		tx.Rollback()
-		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		errorMsg := fmt.Sprintf("No return details created. Products not found in database: %s", strings.Join(productsNotFound, ", "))
+		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to create return details", errorMsg)
 		return
 	}
 
@@ -359,7 +381,13 @@ func (rc *ReturnController) UpdateDataReturn(c *gin.Context) {
 		}
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Return updated successfully", ret.ToReturnResponse())
+	// Build success message with warning if some products weren't found
+	message := fmt.Sprintf("Return updated successfully (%d of %d products synced)", createdCount, len(order.OrderDetails))
+	if len(productsNotFound) > 0 {
+		message += fmt.Sprintf(". Warning: %d product(s) not found - SKU: %s", len(productsNotFound), strings.Join(productsNotFound, ", "))
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, message, ret.ToReturnResponse())
 }
 
 // UpdateAdminReturn godoc
@@ -392,6 +420,9 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 		return
 	}
 
+	// Convert old tracking to uppercase and trim spaces
+	req.OldTracking = strings.ToUpper(strings.TrimSpace(req.OldTracking))
+
 	// Check for duplicate old tracking if changed
 	if ret.OldTracking != req.OldTracking {
 		var existingReturn models.Return
@@ -399,6 +430,19 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Old tracking already exists", "Return with this old tracking already exists")
 			return
 		}
+	}
+
+	// Find order by old_tracking first (before transaction)
+	var order models.Order
+	if err := rc.DB.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		return
+	}
+
+	// Check if order has details
+	if len(order.OrderDetails) == 0 {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Order has no details", "The order has no order details to copy")
+		return
 	}
 
 	// Start database transaction
@@ -415,42 +459,48 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 	ret.ReturnReason = req.ReturnReason
 	ret.ReturnNumber = req.ReturnNumber
 	ret.ScrapNumber = req.ScrapNumber
+	ret.OrderGineeID = order.OrderGineeID
 
-	// Find order by old_tracking and sync product details
-	var order models.Order
-	if err := tx.Preload("OrderDetails").Where("tracking = ?", req.OldTracking).First(&order).Error; err == nil {
-		// Copy OrderGineeID from order to return
-		ret.OrderGineeID = order.OrderGineeID
+	// Clear existing return details (soft delete)
+	if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+		return
+	}
 
-		// Clear existing return details
-		if err := tx.Where("return_id = ?", ret.ID).Delete(&models.ReturnDetail{}).Error; err != nil {
+	// Track products not found and created count
+	var productsNotFound []string
+	var createdCount int
+
+	// Create return details based on order details
+	for _, orderDetail := range order.OrderDetails {
+		// Find product by SKU from order detail
+		var product models.Product
+		if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err != nil {
+			// Track products not found
+			productsNotFound = append(productsNotFound, orderDetail.Sku)
+			continue
+		}
+
+		returnDetail := models.ReturnDetail{
+			ReturnID:  ret.ID,
+			ProductID: product.ID,
+			Quantity:  orderDetail.Quantity,
+		}
+
+		if err := tx.Create(&returnDetail).Error; err != nil {
 			tx.Rollback()
-			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to clear existing return details", err.Error())
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
 			return
 		}
+		createdCount++
+	}
 
-		// Create return details based on order details
-		for _, orderDetail := range order.OrderDetails {
-			// Find product by SKU
-			var product models.Product
-			if err := tx.Where("sku = ?", orderDetail.Sku).First(&product).Error; err == nil {
-				returnDetail := models.ReturnDetail{
-					ReturnID:  ret.ID,
-					ProductID: product.ID,
-					Quantity:  orderDetail.Quantity,
-				}
-
-				if err := tx.Create(&returnDetail).Error; err != nil {
-					tx.Rollback()
-					utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create return detail", err.Error())
-					return
-				}
-			}
-		}
-	} else {
-		// If order not found, rollback transaction
+	// If no return details were created, return an error
+	if createdCount == 0 {
 		tx.Rollback()
-		utils.ErrorResponse(c, http.StatusNotFound, "Order not found", "No order found with the specified tracking number")
+		errorMsg := fmt.Sprintf("No return details created. Products not found in database: %s", strings.Join(productsNotFound, ", "))
+		utils.ErrorResponse(c, http.StatusBadRequest, "Failed to create return details", errorMsg)
 		return
 	}
 
@@ -484,7 +534,13 @@ func (rc *ReturnController) UpdateAdminReturn(c *gin.Context) {
 		}
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Return updated successfully", ret.ToReturnResponse())
+	// Build success message with warning if some products weren't found
+	message := fmt.Sprintf("Return updated successfully (%d of %d products synced)", createdCount, len(order.OrderDetails))
+	if len(productsNotFound) > 0 {
+		message += fmt.Sprintf(". Warning: %d product(s) not found - SKU: %s", len(productsNotFound), strings.Join(productsNotFound, ", "))
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, message, ret.ToReturnResponse())
 }
 
 // Request/Response structs
