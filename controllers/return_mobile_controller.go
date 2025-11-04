@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ func NewReturnMobileController(db *gorm.DB) *ReturnMobileController {
 
 // GetReturnMobiles godoc
 // @Summary Get all return mobiles
-// @Description Get list of all return mobiles (public access, no login required)
+// @Description Get list of return mobiles from the last 7 days (public access, no login required)
 // @Tags return-mobiles
 // @Accept json
 // @Produce json
@@ -43,23 +44,26 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 	var returnMobiles []models.Return
 	var total int64
 
-	// Build query with optional search
-	query := rmc.DB.Model(&models.Return{})
+	// Calculate date 7 days ago from now
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
+
+	// Build query with optional search and date filter
+	query := rmc.DB.Model(&models.Return{}).Where("created_at >= ?", oneWeekAgo)
 
 	if search != "" {
 		// Search by return mobile tracking with partial match
-		query = query.Where("tracking ILIKE ?", "%"+search+"%")
+		query = query.Where("new_tracking ILIKE ?", "%"+search+"%")
 	}
 
-	// Get total count with search filter
+	// Get total count with search filter and date filter
 	if err := query.Count(&total).Error; err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to count return", err.Error())
 		return
 	}
 
-	// Get return mobiles with pagination, search filter, and order by ID descending
+	// Get return mobiles with pagination, search filter, date filter, and order by ID descending
 	if err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&returnMobiles).Error; err != nil {
-		utils.ErrorResponse(c, 500, "Failed to fetch return mobiles", err.Error())
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to fetch return mobiles", err.Error())
 		return
 	}
 
@@ -79,7 +83,7 @@ func (rmc *ReturnMobileController) GetReturnMobiles(c *gin.Context) {
 	}
 
 	// Build success message
-	message := "Return mobiles retrieved successfully"
+	message := "Return mobiles from the last 7 days retrieved successfully"
 	if search != "" {
 		message += " (filtered by tracking: " + search + ")"
 	}
