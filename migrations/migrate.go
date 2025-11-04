@@ -254,13 +254,13 @@ func seedDefaultBoxes(db *gorm.DB) {
 func seedSuperadminUser(db *gorm.DB) {
 	// Check if superadmin user already exists
 	var existingUser models.User
-	if err := db.Where("username = ?", "saya").First(&existingUser).Error; err == nil {
+	if err := db.Where("username = ?", "admin").First(&existingUser).Error; err == nil {
 		log.Println("Superadmin user already exists")
 		return
 	}
 
 	// Hash password
-	hashedPassword, err := utils.HashPassword("gajahku")
+	hashedPassword, err := utils.HashPassword("55555")
 	if err != nil {
 		log.Printf("Failed to hash superadmin password: %v", err)
 		return
@@ -268,10 +268,10 @@ func seedSuperadminUser(db *gorm.DB) {
 
 	// Create superadmin user
 	user := models.User{
-		Username: "saya",
-		Email:    "eka.mauln@gmail.com",
+		Username: "admin",
+		Email:    "admin@example.com",
 		Password: hashedPassword,
-		FullName: "Saya",
+		FullName: "Administrator",
 		IsActive: true,
 	}
 
