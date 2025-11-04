@@ -3352,7 +3352,7 @@ const docTemplate = `{
         },
         "/api/mobile/returns": {
             "get": {
-                "description": "Get list of all return mobiles (public access, no login required)",
+                "description": "Get list of return mobiles from the last 7 days (public access, no login required)",
                 "consumes": [
                     "application/json"
                 ],
