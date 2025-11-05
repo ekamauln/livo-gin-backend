@@ -33,3 +33,14 @@ func (s *Store) ToStoreResponse() StoreResponse {
 		Updated: s.UpdatedAt,
 	}
 }
+
+// ToStoreMobileResponse converts Store model to StoreResponse for mobile use
+func (s *Store) ToStoreMobileResponse() StoreResponse {
+	return StoreResponse{
+		ID:      s.ID,
+		Code:    s.Code,
+		Name:    s.Name,
+		Created: s.CreatedAt,
+		Updated: s.UpdatedAt,
+	}
+}

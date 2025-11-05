@@ -118,6 +118,15 @@ definitions:
       pagination:
         $ref: '#/definitions/utils.PaginationResponse'
     type: object
+  controllers.ChannelsMobileListResponse:
+    properties:
+      channels:
+        items:
+          $ref: '#/definitions/models.ChannelResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   controllers.ComplainDetailInReport:
     properties:
       complain_code:
@@ -1057,6 +1066,15 @@ definitions:
         type: string
       reason:
         type: string
+    type: object
+  controllers.StoreMobilesListResponse:
+    properties:
+      stores:
+        items:
+          $ref: '#/definitions/models.StoreResponse'
+        type: array
+      total:
+        type: integer
     type: object
   controllers.StoresListResponse:
     properties:
@@ -3649,6 +3667,31 @@ paths:
       summary: Get mb-ribbon counts per day for current month
       tags:
       - mb-ribbons
+  /api/mobile/channels:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all channel mobiles (public access, no login required)
+      parameters:
+      - description: Search by channel mobile code or name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.ChannelsMobileListResponse'
+              type: object
+      summary: Get all channel mobiles
+      tags:
+      - channel-mobiles
   /api/mobile/orders:
     get:
       consumes:
@@ -4003,6 +4046,31 @@ paths:
       summary: Get a return mobile by ID
       tags:
       - return-mobiles
+  /api/mobile/stores:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all store mobiles (public access, no login required)
+      parameters:
+      - description: Search by store mobile tracking (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.StoreMobilesListResponse'
+              type: object
+      summary: Get all store mobiles
+      tags:
+      - store-mobiles
   /api/online-flow:
     get:
       consumes:

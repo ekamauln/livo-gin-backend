@@ -2935,6 +2935,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/mobile/channels": {
+            "get": {
+                "description": "Get list of all channel mobiles (public access, no login required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channel-mobiles"
+                ],
+                "summary": "Get all channel mobiles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by channel mobile code or name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.ChannelsMobileListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/mobile/orders": {
             "get": {
                 "security": [
@@ -3508,6 +3551,49 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mobile/stores": {
+            "get": {
+                "description": "Get list of all store mobiles (public access, no login required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "store-mobiles"
+                ],
+                "summary": "Get all store mobiles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by store mobile tracking (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.StoreMobilesListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -7425,6 +7511,20 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.ChannelsMobileListResponse": {
+            "type": "object",
+            "properties": {
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ChannelResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "controllers.ComplainDetailInReport": {
             "type": "object",
             "properties": {
@@ -8816,6 +8916,20 @@ const docTemplate = `{
                 },
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.StoreMobilesListResponse": {
+            "type": "object",
+            "properties": {
+                "stores": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.StoreResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

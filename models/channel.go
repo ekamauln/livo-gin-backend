@@ -33,3 +33,14 @@ func (c *Channel) ToChannelResponse() ChannelResponse {
 		Updated: c.UpdatedAt,
 	}
 }
+
+// ToChannelMobileResponse converts Channel model to ChannelResponse for mobile use
+func (c *Channel) ToChannelMobileResponse() ChannelResponse {
+	return ChannelResponse{
+		ID:      c.ID,
+		Code:    c.Code,
+		Name:    c.Name,
+		Created: c.CreatedAt,
+		Updated: c.UpdatedAt,
+	}
+}
