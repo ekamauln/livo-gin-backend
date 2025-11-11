@@ -825,6 +825,15 @@ definitions:
           $ref: '#/definitions/models.PcOnlineResponse'
         type: array
     type: object
+  controllers.PickOrdersListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/utils.PaginationResponse'
+      pick_orders:
+        items:
+          $ref: '#/definitions/models.PickOrderResponse'
+        type: array
+    type: object
   controllers.ProductsListResponse:
     properties:
       pagination:
@@ -1612,6 +1621,48 @@ definitions:
         $ref: '#/definitions/models.UserResponse'
       user_id:
         type: integer
+    type: object
+  models.PickOrderDetailResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      pick_order_id:
+        type: integer
+      product:
+        $ref: '#/definitions/models.ProductResponse'
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sku:
+        type: string
+      updated_at:
+        type: string
+      variant:
+        type: string
+    type: object
+  models.PickOrderResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      order:
+        $ref: '#/definitions/models.OrderResponse'
+      order_id:
+        type: integer
+      pick_order_details:
+        items:
+          $ref: '#/definitions/models.PickOrderDetailResponse'
+        type: array
+      picker:
+        $ref: '#/definitions/models.UserResponse'
+      picker_id:
+        type: integer
+      updated_at:
+        type: string
     type: object
   models.ProductResponse:
     properties:
@@ -3829,6 +3880,7 @@ paths:
       consumes:
       - application/json
       description: Change order status from "picking process" to "picking complete"
+        and create pick order records
       parameters:
       - description: Order ID
         in: path
@@ -4964,6 +5016,108 @@ paths:
       summary: Get pc-online counts per day for current month
       tags:
       - pc-onlines
+  /api/pick-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all pick orders with their details and search (logged
+        in users only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Start date (YYYY-MM-DD format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD format)
+        in: query
+        name: end_date
+        type: string
+      - description: Search by Picker name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.PickOrdersListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all Pick Orders
+      tags:
+      - Pick-Orders
+  /api/pick-orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a pick order by ID (admin only)
+      parameters:
+      - description: Pick order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PickOrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a pick order by ID
+      tags:
+      - Pick-Orders
   /api/products:
     get:
       consumes:

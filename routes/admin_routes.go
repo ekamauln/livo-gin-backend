@@ -14,11 +14,13 @@ func SetupAdminRoutes(api *gin.RouterGroup, cfg *config.Config, adminController 
 	admin := api.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(cfg))
 	{
-		// User management (superadmin)
+		// Get all users - public to all authenticated users (no role restriction)
+		admin.GET("/users", adminController.GetUsers)
+
+		// User management (superadmin only and coordinator)
 		users := admin.Group("/users")
 		users.Use(middleware.RequireManagementRoles())
 		{
-			users.GET("", adminController.GetUsers)                        // List all users
 			users.GET("/:id", adminController.GetUser)                     // Get user by ID
 			users.PUT("/:id/status", adminController.UpdateUserStatus)     // Update user status (active/inactive)
 			users.PUT("/:id/password", adminController.UpdateUserPassword) // Update user password

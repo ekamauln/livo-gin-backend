@@ -387,7 +387,7 @@ func (omc *OrderMobileController) GetOrder(c *gin.Context) {
 
 // CompletePickingOrder godoc
 // @Summary Complete picking process
-// @Description Change order status from "picking process" to "picking complete"
+// @Description Change order status from "picking process" to "picking complete" and create pick order records
 // @Tags mobile-orders
 // @Accept json
 // @Produce json
@@ -420,9 +420,18 @@ func (omc *OrderMobileController) CompletePickingOrder(c *gin.Context) {
 		return
 	}
 
+	// Start database transaction
+	tx := omc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var order models.Order
 	// Find order assigned to current picker with "picking process" status
-	if err := omc.DB.Where("id = ? AND picker_id = ? AND status = ?", orderID, userID, "picking process").First(&order).Error; err != nil {
+	if err := tx.Preload("OrderDetails").Where("id = ? AND picker_id = ? AND status = ?", orderID, userID, "picking process").First(&order).Error; err != nil {
+		tx.Rollback()
 		if err == gorm.ErrRecordNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Order not found or not in picking process", "order not found or not in picking process")
 		} else {
@@ -431,19 +440,55 @@ func (omc *OrderMobileController) CompletePickingOrder(c *gin.Context) {
 		return
 	}
 
+	// Create PickOrder record
+	pickOrder := models.PickOrder{
+		OrderID:  order.ID,
+		PickerID: userID,
+	}
+
+	if err := tx.Create(&pickOrder).Error; err != nil {
+		tx.Rollback()
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create pick order", err.Error())
+		return
+	}
+
+	// Create PickOrderDetail records from OrderDetails
+	for _, orderDetail := range order.OrderDetails {
+		pickOrderDetail := models.PickOrderDetail{
+			PickOrderID: pickOrder.ID,
+			Sku:         orderDetail.Sku,
+			ProductName: orderDetail.ProductName,
+			Variant:     orderDetail.Variant,
+			Quantity:    orderDetail.Quantity,
+		}
+
+		if err := tx.Create(&pickOrderDetail).Error; err != nil {
+			tx.Rollback()
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to create pick order detail", err.Error())
+			return
+		}
+	}
+
 	// Update order status to complete
 	order.Status = "picking complete"
 
 	// Save the changes
-	if err := omc.DB.Save(&order).Error; err != nil {
+	if err := tx.Save(&order).Error; err != nil {
+		tx.Rollback()
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to complete order", err.Error())
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to commit transaction", err.Error())
 		return
 	}
 
 	// Load order with details and picker for response
 	omc.DB.Preload("OrderDetails").Preload("Picker").First(&order, order.ID)
 
-	utils.SuccessResponse(c, http.StatusOK, "Order picking completed successfully", order.ToOrderResponse())
+	utils.SuccessResponse(c, http.StatusOK, "Order picking completed successfully and pick order records created", order.ToOrderResponse())
 }
 
 // Response structs for mobile endpoints

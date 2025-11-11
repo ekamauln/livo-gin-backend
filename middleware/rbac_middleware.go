@@ -80,47 +80,47 @@ func RequireCoordinatorRole() gin.HandlerFunc {
 
 // RequireAdminRole middleware for admin-only endpoints
 func RequireAdminRole() gin.HandlerFunc {
-	return RequireRoles("admin")
+	return RequireRoles("superadmin", "coordinator", "admin")
 }
 
 // RequireFinanceRole middleware for finance-only endpoints
 func RequireFinanceRole() gin.HandlerFunc {
-	return RequireRoles("finance")
+	return RequireRoles("superadmin", "coordinator", "finance")
 }
 
 // RequirePickerRole middleware for picker-only endpoints
 func RequirePickerRole() gin.HandlerFunc {
-	return RequireRoles("picker")
+	return RequireRoles("superadmin", "coordinator", "picker")
 }
 
 // RequireOutboundRole middleware for outbound-only endpoints
 func RequireOutboundRole() gin.HandlerFunc {
-	return RequireRoles("outbound")
+	return RequireRoles("superadmin", "coordinator", "outbound")
 }
 
 // RequireQCRibbonRole middleware for quality control for ribbon-only endpoints
 func RequireQCRibbonRole() gin.HandlerFunc {
-	return RequireRoles("qc-ribbon")
+	return RequireRoles("superadmin", "coordinator", "qc-ribbon")
 }
 
 // RequireQCOnlineRole middleware for quality control for online-only endpoints
 func RequireQCOnlineRole() gin.HandlerFunc {
-	return RequireRoles("qc-online")
+	return RequireRoles("superadmin", "coordinator", "qc-online")
 }
 
 // RequireMBRibbonRole middleware for product checker for ribbon-only endpoints
 func RequireMBRibbonRole() gin.HandlerFunc {
-	return RequireRoles("mb-ribbon")
+	return RequireRoles("superadmin", "coordinator", "mb-ribbon")
 }
 
 // RequireMBOnlineRole middleware for product checker for online-only endpoints
 func RequireMBOnlineRole() gin.HandlerFunc {
-	return RequireRoles("mb-online")
+	return RequireRoles("superadmin", "coordinator", "mb-online")
 }
 
 // RequirePackingRole middleware for packing-only endpoints
 func RequirePackingRole() gin.HandlerFunc {
-	return RequireRoles("packing")
+	return RequireRoles("superadmin", "coordinator", "packing")
 }
 
 // RequireGuestRole middleware for guest-only endpoints

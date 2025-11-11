@@ -13,6 +13,7 @@ func SetupOrderMobileRoutes(api *gin.RouterGroup, cfg *config.Config, orderMobil
 	// Mobile order routes (authenticated pickers only)
 	mobileOrders := api.Group("/mobile/orders")
 	mobileOrders.Use(middleware.AuthMiddleware(cfg))
+	mobileOrders.Use(middleware.RequirePickerRole())
 	{
 		// Mobile order routes - GetOrders now includes search functionality via query parameter
 		mobileOrders.GET("", orderMobileController.GetOrders)                         // Get all orders ready to pick (with optional search)

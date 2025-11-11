@@ -67,9 +67,10 @@ func main() {
 	reportController := controllers.NewReportController(db)
 	channelMobileController := controllers.NewChannelMobileController(db)
 	storeMobileController := controllers.NewStoreMobileController(db)
+	pickOrderController := controllers.NewPickOrderController(db)
 
 	// Setup routes
-	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController, outboundController, onlineFlowController, ribbonFlowController, returnController, returnMobileController, complainController, reportController, channelMobileController, storeMobileController)
+	router := routes.SetupRoutes(cfg, authController, userController, adminController, productController, orderController, orderMobileController, boxController, expeditionController, channelController, storeController, mbOnlineController, mbRibbonController, qcRibbonController, qcOnlineController, pcOnlineController, outboundController, onlineFlowController, ribbonFlowController, returnController, returnMobileController, complainController, reportController, channelMobileController, storeMobileController, pickOrderController)
 
 	// Build API URL from config
 	apiURL := fmt.Sprintf("http://%s:%s", cfg.APIHost, cfg.Port)

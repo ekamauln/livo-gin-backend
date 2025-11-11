@@ -36,6 +36,8 @@ func AutoMigrate(db *gorm.DB) {
 		&models.Return{},
 		&models.ReturnDetail{},
 		&models.Store{},
+		&models.PickOrder{},
+		&models.PickOrderDetail{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
