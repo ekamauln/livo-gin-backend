@@ -5102,7 +5102,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Search by Picker name (partial match)",
+                        "description": "Search by Picker name, Order Ginee ID, or Tracking (partial match)",
                         "name": "search",
                         "in": "query"
                     }

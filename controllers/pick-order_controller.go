@@ -33,7 +33,7 @@ func NewPickOrderController(db *gorm.DB) *PickOrderController {
 // @Param page_size query int false "Page size" default(10)
 // @Param start_date query string false "Start date (YYYY-MM-DD format)"
 // @Param end_date query string false "End date (YYYY-MM-DD format)"
-// @Param search query string false "Search by Picker name (partial match)"
+// @Param search query string false "Search by Picker name, Order Ginee ID, or Tracking (partial match)"
 // @Success 200 {object} utils.Response{data=PickOrdersListResponse}
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
@@ -83,9 +83,11 @@ func (poc *PickOrderController) GetPickOrders(c *gin.Context) {
 	}
 
 	if search != "" {
-		// Search by picker name with partial match
-		query = query.Joins("JOIN users ON users.id = pick_orders.picker_id AND users.deleted_at IS NULL").
-			Where("users.full_name ILIKE ?", "%"+search+"%")
+		// Search by picker name, order ginee ID, or tracking with partial match
+		query = query.Joins("LEFT JOIN users ON users.id = pick_orders.picker_id AND users.deleted_at IS NULL").
+			Joins("LEFT JOIN orders ON orders.id = pick_orders.order_id AND orders.deleted_at IS NULL").
+			Where("users.full_name ILIKE ? OR orders.order_ginee_id ILIKE ? OR orders.tracking ILIKE ?",
+				"%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	// Get total count with search filter
