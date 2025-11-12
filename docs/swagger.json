@@ -3,19 +3,12 @@
     "info": {
         "description": "A comprehensive user management backend service with JWT authentication and role-based access control",
         "title": "Livotech Backend Service API",
-        "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "url": "http://www.example.com/support",
-            "email": "support@example.com"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
+            "email": "support@livotech.com"
         },
         "version": "1.0"
     },
-    "host": "192.168.31.136:8081",
     "basePath": "/",
     "paths": {
         "/api/admin/roles": {
@@ -10401,7 +10394,7 @@
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Enter the token with the 'Bearer ' prefix, e.g. 'Bearer abcdef12345'.",
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

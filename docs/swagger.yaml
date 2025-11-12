@@ -1927,18 +1927,12 @@ definitions:
       success:
         type: boolean
     type: object
-host: 192.168.31.136:8081
 info:
   contact:
-    email: support@example.com
+    email: support@livotech.com
     name: API Support
-    url: http://www.example.com/support
   description: A comprehensive user management backend service with JWT authentication
     and role-based access control
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-  termsOfService: http://swagger.io/terms/
   title: Livotech Backend Service API
   version: "1.0"
 paths:
@@ -6515,7 +6509,7 @@ paths:
       - users
 securityDefinitions:
   BearerAuth:
-    description: Enter the token with the 'Bearer ' prefix, e.g. 'Bearer abcdef12345'.
+    description: Type "Bearer" followed by a space and JWT token.
     in: header
     name: Authorization
     type: apiKey

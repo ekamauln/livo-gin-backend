@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,16 +18,39 @@ func ConnectDatabase(config *Config) {
 		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort, config.DBSSLMode,
 	)
 
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	maxRetries := 10
+	retryInterval := 10 * time.Second
 
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		log.Printf("Attempting to connect to database (attempt %d/%d)...", attempt, maxRetries)
+
+		var err error
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+
+		if err == nil {
+			// Connection successful, verify it works
+			sqlDB, err := DB.DB()
+			if err == nil {
+				err = sqlDB.Ping()
+				if err == nil {
+					log.Println("✓ Database connected successfully")
+					return
+				}
+			}
+			log.Printf("✗ Database connection verification failed: %v", err)
+		} else {
+			log.Printf("✗ Failed to connect to database: %v", err)
+		}
+
+		if attempt < maxRetries {
+			log.Printf("⏳ Waiting %v before retry...", retryInterval)
+			time.Sleep(retryInterval)
+		}
 	}
 
-	log.Println("Database connected successfully")
+	log.Fatal("❌ Failed to connect to database after maximum retry attempts")
 }
 
 func GetDB() *gorm.DB {

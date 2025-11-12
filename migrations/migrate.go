@@ -40,10 +40,10 @@ func AutoMigrate(db *gorm.DB) {
 		&models.PickOrderDetail{},
 	)
 	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
+		log.Printf("⚠️ Warning: Failed to migrate some tables: %v", err)
+	} else {
+		log.Println("✓ Database migration completed successfully")
 	}
-
-	log.Println("Database migration completed successfully")
 
 	// Seed default roles
 	seedDefaultRoles(db)
@@ -301,5 +301,5 @@ func seedSuperadminUser(db *gorm.DB) {
 		return
 	}
 
-	log.Println("Superadmin user created successfully")
+	log.Println("✓ Superadmin user created successfully (username: admin, password: 55555)")
 }
